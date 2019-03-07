@@ -22,6 +22,9 @@
  * @brief  Main jtag core library header
  * @author Jean-François DEL NERO <Jean-Francois.DELNERO@viveris.fr>
  */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef _jtag_core_
 typedef void jtag_core;
@@ -269,3 +272,8 @@ int jtagcore_memory_set_data_pin(jtag_core * jc, int data_bit, int device, int p
 int jtagcore_memory_set_ctrl_pin(jtag_core * jc, int ctrl, int polarity, int device, int pin);
 unsigned long jtagcore_memory_read(jtag_core * jc, int mem_adr);
 int jtagcore_memory_write(jtag_core * jc, int mem_adr, unsigned long data);
+
+#ifdef __cplusplus
+}
+#endif
+
