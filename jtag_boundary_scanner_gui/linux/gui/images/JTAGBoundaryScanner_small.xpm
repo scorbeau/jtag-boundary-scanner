@@ -1,0 +1,26 @@
+/* XPM */
+static const char *const JTAGBoundaryScanner_small_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 4 1 ",
+"  c #008000",
+". c blue",
+"X c cyan",
+"o c None",
+/* pixels */
+"........Xooooooo",
+"........XXX     ",
+"........Xooooooo",
+"........XXX     ",
+"........Xooooooo",
+"........XXX     ",
+"........Xooooooo",
+"........XXX     ",
+"........Xooooooo",
+"........XXX     ",
+"XXXXXXXXXooooooo",
+"oXoXoXoXoooooooo",
+"oXoXoXoXoooooooo",
+"o o o o oooooooo",
+"o o o o oooooooo",
+"o ooo o oooooooo"
+};
