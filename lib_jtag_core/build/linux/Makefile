@@ -10,7 +10,8 @@ CFLAGS=-O3 $(INCLUDES) -Wall
 
 LDFLAGS= -g -shared -lc -lm  -ldl
 
-EXEC=lib_jtag_core.so
+STATIC_LIB=libjtag-core-static.a
+DYNAMIC_LIB=libjtag-core.so
 
 ifeq ($(UNAME), Linux)
 CFLAGS += -fPIC
@@ -18,27 +19,27 @@ endif
 
 ifeq ($(findstring CYGWIN,$(shell uname)),CYGWIN)
 LDFLAGS= -g -shared -lc -lm  -ldl
-EXEC=lib_jtag_core.dll
+DYNAMIC_LIB=lib_jtag_core.dll
 endif
 
 ifeq ($(UNAME), Darwin)
 CFLAGS += -arch i386 -mmacosx-version-min=10.5
-LDFLAGS +=-arch i386 -dynamiclib -current_version 2.0 -install_name @executable_path/../Frameworks/lib_jtag_core.dylib -mmacosx-version-min=10.5
-EXEC=lib_jtag_core.dylib
+LDFLAGS +=-arch i386 -dynamiclib -current_version 2.0 -install_name @executable_path/../Frameworks/libjtag-core.dylib -mmacosx-version-min=10.5
+DYNAMIC_LIB=lib_jtag_core.dylib
 endif
 
 PROBES_DRIVERS = #lpt_jtag_drv.o jlink_jtag_drv.o ftdi_jtag_drv.o
 PROTOCOLS_DRIVERS = i2c_over_jtag.o mdio_over_jtag.o spi_over_jtag.o memory_over_jtag.o
 
-all: $(EXEC)
+all: $(STATIC_LIB) $(DYNAMIC_LIB)
 
 lib_jtag_core.dylib: jtag_core.o dbg_logs.o bsdl_loader.o bsdl_strings.o drv_loader.o drivers_list.o $(PROTOCOLS_DRIVERS) $(PROBES_DRIVERS)
 	$(CC) -o $@    $^ $(LDFLAGS)
 
-lib_jtag_core.a: jtag_core.o dbg_logs.o bsdl_loader.o bsdl_strings.o drv_loader.o drivers_list.o $(PROTOCOLS_DRIVERS) $(PROBES_DRIVERS)
-	$(AR) r $@    $^
+libjtag-core-static.a: jtag_core.o dbg_logs.o bsdl_loader.o bsdl_strings.o drv_loader.o drivers_list.o $(PROTOCOLS_DRIVERS) $(PROBES_DRIVERS)
+	$(AR) rcs $@   $^
 
-lib_jtag_core.so: jtag_core.o dbg_logs.o bsdl_loader.o bsdl_strings.o drv_loader.o drivers_list.o $(PROTOCOLS_DRIVERS) $(PROBES_DRIVERS)
+libjtag-core.so: jtag_core.o dbg_logs.o bsdl_loader.o bsdl_strings.o drv_loader.o drivers_list.o $(PROTOCOLS_DRIVERS) $(PROBES_DRIVERS)
 	$(CC) -o $@    $^ $(LDFLAGS)
 
 lib_jtag_core.dll: jtag_core.o dbg_logs.o bsdl_loader.o bsdl_strings.o drv_loader.o drivers_list.o $(PROTOCOLS_DRIVERS) $(PROBES_DRIVERS)
@@ -87,6 +88,6 @@ clean:
 	rm -rf *.o
 
 mrproper: clean
-	rm -rf $(EXEC)
+	rm -rf $(STATIC_LIB) $(DYNAMIC_LIB)
 
 .PHONY: clean mrproper
