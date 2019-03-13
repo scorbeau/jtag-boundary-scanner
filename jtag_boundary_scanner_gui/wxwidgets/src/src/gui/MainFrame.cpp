@@ -33,6 +33,7 @@
 #include "images/JTAGBoundaryScanner_small.xpm"
 
 #include "version.h"
+#include "plateform.h"
 
 // ----------------------------------------------------------------------------
 // event tables
@@ -118,7 +119,7 @@ MainFrame::MainFrame(SystemController *p_controller)
 
 MainFrame::~MainFrame()
 {
-#warning "Delete processor data"
+//#warning "Delete processor data"
 #if 0
     if(m_menu)
         delete m_menu;

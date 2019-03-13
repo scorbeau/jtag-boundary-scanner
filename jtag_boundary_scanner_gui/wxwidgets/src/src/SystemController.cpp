@@ -24,6 +24,8 @@
 */
 #include "SystemController.h"
 
+#include "plateform.h"
+
 SystemController::SystemController()
 {
     printf("Construct %s\n", __func__);
