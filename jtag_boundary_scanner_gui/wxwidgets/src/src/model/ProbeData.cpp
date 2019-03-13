@@ -27,7 +27,14 @@
 
 ProbeData::ProbeData()
 {
-    m_connect = true;
+    m_connect = false;
+    m_name = "Undefined";
+}
+
+ProbeData::ProbeData(std::string p_name)
+{
+    m_connect = false;
+    m_name = p_name;
 }
 
 bool ProbeData::isConnect(void)
@@ -38,5 +45,10 @@ bool ProbeData::isConnect(void)
 void ProbeData::setConnect(bool p_connect)
 {
     m_connect = p_connect;
+}
+
+std::string ProbeData::getName(void)
+{
+    return m_name;
 }
 

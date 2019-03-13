@@ -116,6 +116,8 @@ void I2cPage::setConnectMode(void)
     m_writeTxtCtrl->Enable(true);
     m_readTxtCtrl->Enable(true);
     m_readSzTxtCtrl->Enable(true);
+
+    /* TODO Refresh processeur list */
 }
 
 void I2cPage::setDisconnectMode(void)

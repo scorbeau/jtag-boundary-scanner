@@ -27,15 +27,13 @@
 
 #include "wxWidgetsInc.h"
 
-#include "model/ProbeData.h"
-#include "model/CpuData.h"
-
-#include <jtag_core.h>
+#include "SystemController.h"
+#include "model/PinData.h"
 
 class MainFrame: public wxFrame
 {
 public:
-    MainFrame(const ProbeData &p_probeData);
+    MainFrame(SystemController *p_controller);
 
     virtual ~MainFrame();
 
@@ -44,7 +42,7 @@ public:
     void ConnectOutputProcessor(int p_eventId);
     void ConnectOutputEnableProcessor(int p_eventId);
     void ConnectToggleProcessor(int p_eventId);
-
+    SystemData* getDataModel(void);
 protected:
     // Menu event manager
     void OnQuit(wxCommandEvent& event);
@@ -76,9 +74,7 @@ protected:
     void OnOutputEnableProcessor(wxCommandEvent& event);
     void OnToggleProcessor(wxCommandEvent& event);
 private:
-    ProbeData m_probeData;
-    jtag_core *m_jtagCore;
-    std::vector<CpuData*> m_cpudata;
+    SystemController *m_controller;
 
     wxMenu *m_menu;
     wxPanel *m_panel;
@@ -86,7 +82,8 @@ private:
 
     int m_checkboxCpuEvtBaseId;
 
-    void ManageConnection(void);
+    void connectProbe(void);
+    void disconnectProbe(void);
     // TODO: Update for gpio
     PinData* getPinFromChkBoxEvt(int checkEvtId);
 

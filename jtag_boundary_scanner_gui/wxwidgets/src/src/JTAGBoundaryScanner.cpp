@@ -22,6 +22,7 @@
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
 
+#include "SystemController.h"
 #include "gui/MainFrame.h"
 
 // Define a new application
@@ -37,13 +38,14 @@ wxIMPLEMENT_APP(JtagBoundaryScanner);
 // main frame
 bool JtagBoundaryScanner::OnInit()
 {
-    ProbeData probeData;
+    SystemController *controller = new SystemController();
+    controller->refreshProbe();
 
     if ( !wxApp::OnInit() )
         return false;
 
     // Create the main frame window
-    MainFrame* frame = new MainFrame(probeData);
+    MainFrame* frame = new MainFrame(controller);
 
     frame->Show(true);
 

@@ -66,7 +66,7 @@ wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
 wxEND_EVENT_TABLE()
 
 // Define MainFrame constructor
-MainFrame::MainFrame(const ProbeData &p_probeData)
+MainFrame::MainFrame(SystemController *p_controller)
        : wxFrame((wxFrame *)NULL,
                  wxID_ANY,
                  "JTAG Boundary Scanner",
@@ -77,12 +77,7 @@ MainFrame::MainFrame(const ProbeData &p_probeData)
 
     m_checkboxCpuEvtBaseId = EVT_Processor_Chkbox;
 
-    m_probeData = p_probeData;
-    m_jtagCore = jtagcore_init();
-    if(!m_jtagCore) {
-        printf("Failed to init jtagcore");
-        exit(-1);
-    }
+    m_controller = p_controller;
 
     SetIcon(wxICON(JTAGBoundaryScanner_small));
 
@@ -106,10 +101,10 @@ MainFrame::MainFrame(const ProbeData &p_probeData)
 
     m_panel = new wxPanel(this, wxID_ANY);
     m_notebook = new wxNotebook(m_panel, wxID_ANY);
-    m_notebook->AddPage(new ProbePage(m_notebook),      "Probes");
-    m_notebook->AddPage(new I2cPage(m_notebook),        "I2C");
-    m_notebook->AddPage(new SpiPage(m_notebook),        "SPI");
-    m_notebook->AddPage(new MdioPage(m_notebook),       "MDIO");
+    m_notebook->AddPage(new ProbePage(m_notebook, this),    "Probes");
+    m_notebook->AddPage(new I2cPage(m_notebook),            "I2C");
+    m_notebook->AddPage(new SpiPage(m_notebook),            "SPI");
+    m_notebook->AddPage(new MdioPage(m_notebook),           "MDIO");
 
     sizerV->Add(m_notebook, 1, wxALL | wxEXPAND, 15);
 
@@ -117,12 +112,12 @@ MainFrame::MainFrame(const ProbeData &p_probeData)
 
     SetStatusText("JTAG Boundary Scanner");
 
-    ManageConnection();
+    m_controller->disconnectProbe();
+    disconnectProbe();
 }
 
 MainFrame::~MainFrame()
 {
-    jtagcore_deinit(m_jtagCore);
 #warning "Delete processor data"
 #if 0
     if(m_menu)
@@ -168,6 +163,11 @@ void MainFrame::ConnectToggleProcessor(int p_eventId)
         p_eventId);
 }
 
+SystemData* MainFrame::getDataModel(void)
+{
+    return m_controller->getSystemData();
+}
+
 void MainFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
     Close(true);
@@ -186,89 +186,57 @@ void MainFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 void MainFrame::OnLoadBsdl(wxCommandEvent& event)
 {
     CpuData *cpu;
-    int err;
-    unsigned long id;
-    int nb_pins;
-    wxString fname;
-    char buffer[512];
-    int type;
-    int i;
-    int cpuIdx;
 
     wxFileDialog dlg(this, "Open BSDL file", wxEmptyString, wxEmptyString,
                     "BSDL and BSD file (*.bsdl;*.bsd)|*.bsdl;*.bsd|Text file (*.txt)|*.txt|Any file (*)|*",
                     wxFD_OPEN | wxFD_FILE_MUST_EXIST | wxFD_CHANGE_DIR);
     if (dlg.ShowModal() == wxID_OK) {
-        fname = dlg.GetPath ();
-        strncpy(buffer, fname.mb_str(), sizeof(buffer)-1);
-        //printf("Path %s\n", buffer);
-        cpuIdx = jtagcore_loadbsdlfile(m_jtagCore, buffer, -1);
-        if(cpuIdx < 0) {
+        cpu = m_controller->loadBsdlFile(dlg.GetPath().ToStdString());
+        if(!cpu) {
             (void)wxMessageBox(wxString::FromUTF8("Invalid BSDL file:\n") +
-                               fname,
+                               dlg.GetPath(),
                                "BSDL file error",
                                wxOK | wxICON_ERROR);
         } else {
-            //printf("jtagcore_loadbsdlfile ret %d\n", err);
-            id = jtagcore_get_bsdl_id(m_jtagCore, buffer);
-            err = jtagcore_get_dev_name(m_jtagCore,
-                                        cpuIdx, 
-                                        buffer,
-                                        NULL);
-            //printf("Processor name %s err %d\n", buffer, err);
-            if(!err) {
-                cpu = new CpuData(std::string(buffer), id, cpuIdx);
-                //printf("Id = %16X\n", id);
-                nb_pins = jtagcore_get_number_of_pins(m_jtagCore, cpuIdx);
-                //printf("Nb pins %d\n", nb_pins);
-
-                i = 0;
-                while((i<nb_pins) && (!err)) {
-                    err = jtagcore_get_pin_properties(m_jtagCore,
-                                                      cpuIdx,
-                                                      i,
-                                                      buffer,
-                                                      sizeof(buffer),
-                                                      &type);
-                    if(!err) {
-                        //printf("Name %s type %d\r\n", buffer, type);
-
-                        cpu->addPin(std::string(buffer),
-                                    type,
-                                    false,
-                                    false,
-                                    false,
-                                    false);
-                    }
-                    i++;
-                }
-
-                if(err) {
-                    delete cpu;
-                    (void)wxMessageBox(wxString::FromUTF8("Failed to get "
-                                   "processor data from :\n") +
-                                   fname,
-                                   "BSDL file error",
-                                   wxOK | wxICON_ERROR);
-                } else {
-                    m_notebook->AddPage(new CpuPage(m_notebook, this, cpu),
-                                        cpu->getCpuName());
-                    m_cpudata.push_back(cpu);
-                    m_checkboxCpuEvtBaseId += (3*cpu->getNbUsablePins());
-                }
-            }
+            m_notebook->AddPage(new CpuPage(m_notebook, this, cpu),
+                                cpu->getCpuName());
+            m_checkboxCpuEvtBaseId += (3*cpu->getNbUsablePins());
         }
     }
 }
 
 void MainFrame::OnRefreshProbe(wxCommandEvent& event)
 {
+    wxButton *btn = (wxButton*) event.GetEventObject();
+    ProbePage *page = (ProbePage*) btn->GetParent();
     printf("Refresh Probe\n");
+    // Refresh model
+    m_controller->refreshProbe();
+    page->refreshProbeList();
 }
 
 void MainFrame::OnConnectProbe(wxCommandEvent& event)
 {
-    ManageConnection();
+    wxButton *btn = (wxButton*) event.GetEventObject();
+    ProbePage *page = (ProbePage*) btn->GetParent();
+    int index = 0;
+
+    printf("Current selected probe %d\n", page->getSelectedProbeIndex());
+
+    if(btn->GetLabel() == "Connect") {
+        // TODO: Get probe indentifier
+        index = m_controller->connectToProbe(0);
+        if(index == -1) {
+            //TODO: Add probe name
+            (void)wxMessageBox("Failed to connect to:\n",
+                               "Probe connection failed !",
+                               wxOK | wxICON_ERROR);
+        }
+        connectProbe();
+    } else {
+        m_controller->disconnectProbe();
+        disconnectProbe();
+    }
 }
 
 void MainFrame::OnAutoscanI2c(wxCommandEvent& event)
@@ -373,23 +341,26 @@ void MainFrame::OnToggleProcessor(wxCommandEvent& event)
 
 }
 
-void MainFrame::ManageConnection(void)
+void MainFrame::connectProbe(void)
 {
     size_t i;
     MainPage *page;
 
-    if(m_probeData.isConnect()) {
-        for(i=0; i<m_notebook->GetPageCount(); i++) {
-            page = (MainPage*)m_notebook->GetPage(i);
-            page->setDisconnectMode();
-        }
-    } else {
-       for(i=0; i<m_notebook->GetPageCount(); i++) {
-            page =(MainPage*)m_notebook->GetPage(i);
-            page->setConnectMode();
-        }
+    for(i=0; i<m_notebook->GetPageCount(); i++) {
+        page = (MainPage*)m_notebook->GetPage(i);
+        page->setConnectMode();
     }
-    m_probeData.setConnect(!m_probeData.isConnect());
+}
+
+void MainFrame::disconnectProbe(void)
+{
+    size_t i;
+    MainPage *page;
+
+    for(i=0; i<m_notebook->GetPageCount(); i++) {
+        page = (MainPage*)m_notebook->GetPage(i);
+        page->setDisconnectMode();
+    }
 }
 
 PinData* MainFrame::getPinFromChkBoxEvt(int checkEvtId)
@@ -400,11 +371,11 @@ PinData* MainFrame::getPinFromChkBoxEvt(int checkEvtId)
     size_t i;
 
     i = 0;
-    while((i < m_cpudata.size()) && !cpu) {
-        if(checkEvtId < (baseEvtId+((int)m_cpudata[i]->getNbUsablePins()*3))) {
-            cpu = m_cpudata[i];
+    while((i < m_controller->getNbCpu()) && !cpu) {
+        if(checkEvtId < (baseEvtId+((int)m_controller->getCpu(i)->getNbUsablePins()*3))) {
+            cpu = m_controller->getCpu(i);
         } else {
-            baseEvtId += (int)m_cpudata[i]->getNbUsablePins()*3;
+            baseEvtId += (int)m_controller->getCpu(i)->getNbUsablePins()*3;
             i++;
         }
     }

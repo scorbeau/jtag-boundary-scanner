@@ -1078,7 +1078,7 @@ int get_jtag_chain(jtag_core * jc,jtag_bsdl * bsdl_desc,char ** lines, char * en
 	}
 }
 
-jtag_bsdl * load_bsdlfile(jtag_core * jc,char *filename)
+jtag_bsdl * load_bsdlfile(jtag_core * jc, const char *filename)
 {
 	FILE * bsdl_file;
 	jtag_bsdl * bsdl;

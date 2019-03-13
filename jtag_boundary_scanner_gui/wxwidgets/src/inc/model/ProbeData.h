@@ -25,15 +25,21 @@
 #ifndef MODEL_PROBE_DATA_H__
 #define MODEL_PROBE_DATA_H__
 
+#include <string>
+
 class ProbeData
 {
 public:
     ProbeData();
+    ProbeData(std::string p_name);
 
     bool isConnect(void);
     void setConnect(bool p_connect);
+
+    std::string getName(void);
 private:
-    bool m_connect = false;
+    bool m_connect;
+    std::string m_name;
 };
 
 

@@ -26,23 +26,26 @@
 #define GUI_PROBE_PAGE_H__
 
 #include "wxWidgetsInc.h"
+#include "MainFrame.h"
 #include "MainPage.h"
 
 // and the panel taking up MyFrame client area
 class ProbePage : public MainPage
 {
 public:
-    ProbePage(wxWindow *parent);
+    ProbePage(wxWindow *parent, MainFrame *frame);
 
     void setConnectMode(void);
     void setDisconnectMode(void);
-    void refreshProbeList(wxArrayString p_arrItems);
-    wxArrayString getSelectedProbe(void);
+    void refreshProbeList(void);
+    int getSelectedProbeIndex(void);
 private:
     wxComboBox      *m_probeCombo;
     wxStaticText    *m_probeDetect;
     wxButton        *m_probeConnectBtn;
     wxButton        *m_probeRefreshBtn;
+    
+    SystemData      *m_model;
 };
 
 #endif /* GUI_PROBE_PAGE_H__ */

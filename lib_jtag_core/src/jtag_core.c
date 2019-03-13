@@ -268,7 +268,7 @@ unsigned long jtagcore_get_dev_id(jtag_core * jc,int device)
 	return JTAG_CORE_BAD_PARAMETER;
 }
 
-int jtagcore_loadbsdlfile(jtag_core * jc, char * path, int device)
+int jtagcore_loadbsdlfile(jtag_core * jc, const char * path, int device)
 {
 	jtag_bsdl * bsdl_file;
 	int i;
@@ -342,7 +342,7 @@ int jtagcore_loadbsdlfile(jtag_core * jc, char * path, int device)
 	return JTAG_CORE_BAD_PARAMETER;
 }
 
-unsigned long jtagcore_get_bsdl_id(jtag_core * jc, char * path)
+unsigned long jtagcore_get_bsdl_id(jtag_core * jc, const char * path)
 {
 	jtag_bsdl * bsdl_file;
 	unsigned long chip_id;

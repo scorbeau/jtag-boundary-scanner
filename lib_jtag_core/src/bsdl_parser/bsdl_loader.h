@@ -75,5 +75,5 @@ typedef struct _jtag_bsdl
 
 }jtag_bsdl;
 
-jtag_bsdl * load_bsdlfile(jtag_core * jc,char *filename);
+jtag_bsdl * load_bsdlfile(jtag_core * jc, const char *filename);
 void unload_bsdlfile(jtag_core * jc, jtag_bsdl * bsdl);

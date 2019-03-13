@@ -26,7 +26,7 @@
 
 #include "gui/MainEventId.h"
 
-ProbePage::ProbePage(wxWindow *parent)
+ProbePage::ProbePage(wxWindow *parent, MainFrame *frame)
         : MainPage(parent, wxID_ANY, false)
 {
     wxBoxSizer* colSizer;
@@ -34,14 +34,9 @@ ProbePage::ProbePage(wxWindow *parent)
     wxSizerFlags flagsBorder = wxSizerFlags().Border().Centre();
     const int border = 4;
 
-    // TODO: get list of probe
+    m_model = frame->getDataModel();
+
     wxArrayString arrItems;
-    arrItems.Add("Probe 1");
-    arrItems.Add("Probe 2");
-    arrItems.Add("Probe 3");
-    arrItems.Add("Probe 4");
-    arrItems.Add("Probe 5");
-    arrItems.Add("Probe 6");
 
     colSizer = new wxBoxSizer( wxVERTICAL );
 
@@ -53,10 +48,8 @@ ProbePage::ProbePage(wxWindow *parent)
 
     rowSizer = new wxBoxSizer( wxHORIZONTAL );
     m_probeCombo = new wxComboBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition,
-                        wxDefaultSize, arrItems, wxCB_SORT);
+                        wxDefaultSize, arrItems);
     rowSizer->Add(m_probeCombo, wxSizerFlags().Border(wxRIGHT, border));
-    //m_probeCombo->SetValue("Probe 1");
-    m_probeCombo->SetSelection(0);
 
     m_probeDetect = new wxStaticText(this, wxID_ANY, "");
     rowSizer->Add(m_probeDetect, wxSizerFlags().Border(wxRIGHT, border));
@@ -72,10 +65,7 @@ ProbePage::ProbePage(wxWindow *parent)
 
     SetSizer(colSizer);
 
-    if(arrItems.IsEmpty()) {
-        m_probeDetect->SetLabel("Not probe found !");
-        m_probeConnectBtn->Enable(false);
-    }
+    refreshProbeList();
 
     FitInside();
     SetScrollRate(5, 5);
@@ -97,8 +87,26 @@ void ProbePage::setDisconnectMode(void)
     /* TODO: Remove processor panel ? */
 }
 
-void ProbePage::refreshProbeList(wxArrayString p_arrItems)
+void ProbePage::refreshProbeList(void)
 {
-    
+    m_probeCombo->Clear();
+
+    if(m_model->getNbProbe() == 0) {
+        m_probeDetect->SetLabel("Not probe found !");
+        m_probeConnectBtn->Enable(false);
+    } else {
+        for(int i=0; i<m_model->getNbProbe(); i++) {
+            m_probeCombo->Append(wxString(m_model->getProbe(i)->getName()));
+        }
+
+        m_probeCombo->SetSelection(0);
+        m_probeDetect->SetLabel("");
+        m_probeConnectBtn->Enable(true);
+    }
+}
+
+int ProbePage::getSelectedProbeIndex(void)
+{
+    return m_probeCombo->GetCurrentSelection();
 }
 
