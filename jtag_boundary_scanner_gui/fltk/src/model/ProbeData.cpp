@@ -22,33 +22,28 @@
 * @brief  Define class ProbeData model.
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
+#include <jtag_core.h>
 
 #include "model/ProbeData.h"
 
-ProbeData::ProbeData()
+ProbeData::ProbeData(std::string p_name, int p_driverId, int p_probeId)
 {
-    m_connect = false;
-    m_name = "Undefined";
+	m_name = p_name;
+	m_identifier = PROBE_ID(p_driverId, p_probeId);
 }
 
-ProbeData::ProbeData(std::string p_name)
+ProbeData::~ProbeData()
 {
-    m_connect = false;
-    m_name = p_name;
 }
 
-bool ProbeData::isConnect(void)
+std::string ProbeData::getName(void) const
 {
-    return m_connect;
+	return m_name;
 }
 
-void ProbeData::setConnect(bool p_connect)
+int ProbeData::getIdentifier(void) const
 {
-    m_connect = p_connect;
+	return m_identifier;
 }
 
-std::string ProbeData::getName(void)
-{
-    return m_name;
-}
 

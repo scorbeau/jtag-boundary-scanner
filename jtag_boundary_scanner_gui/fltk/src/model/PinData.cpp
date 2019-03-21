@@ -26,78 +26,80 @@
 
 #include <jtag_core.h>
 
-PinData::PinData(std::string p_name,
-                   int  p_type,
-                   bool p_inputState,
-                   bool p_outputEnableState,
-                   bool p_outputState,
-                   bool p_toggleState)
+PinData::PinData(std::string p_name, size_t p_chainIndex, int  p_type)
 {
-    m_name = p_name;
-    m_type = p_type;
-    m_inputState = p_inputState;
-    m_outputEnableState = p_outputEnableState;
-    m_outputState = p_outputState;
-    m_toggleState = p_toggleState;
+	m_name = p_name;
+	m_chainIndex = p_chainIndex;
+	m_type = p_type;
+
+	m_inputState = false;
+	m_outputEnableState = false;
+	m_outputState = false;
+	m_toggleState = false;
 }
 
-std::string PinData::getName(void)
+std::string PinData::getName(void) const
 {
-    return m_name;
+	return m_name;
 }
 
-bool PinData::isPinUsable(void)
+size_t PinData::getJtagChainIndex(void) const
 {
-    return m_type ? true : false;
+	return m_chainIndex;
 }
 
-bool PinData::isInputPin(void)
+bool PinData::isPinUsable(void) const
 {
-    return m_type&JTAG_CORE_PIN_IS_INPUT ? true : false;
+	return m_type ? true : false;
 }
 
-bool PinData::isOutputPin(void)
+bool PinData::isInput(void) const
 {
-    return m_type&JTAG_CORE_PIN_IS_OUTPUT ? true : false;
+	return m_type&JTAG_CORE_PIN_IS_INPUT ? true : false;
 }
 
-bool PinData::isTristatePin(void)
+bool PinData::isOutput(void) const
 {
-    return m_type&JTAG_CORE_PIN_IS_TRISTATES ? true : false;
+	return m_type&JTAG_CORE_PIN_IS_OUTPUT ? true : false;
 }
 
-bool PinData::getInputState(void)
+bool PinData::isTristate(void) const
 {
-    return m_inputState;
+	return m_type&JTAG_CORE_PIN_IS_TRISTATES ? true : false;
 }
 
-bool PinData::getOutputEnableState(void)
+bool PinData::getInputState(void) const
 {
-    return m_outputEnableState;
+	return m_inputState;
+}
+
+bool PinData::getOutputEnableState(void) const
+{
+	return m_outputEnableState;
 }
 
 void PinData::setOutputEnableState(bool p_state)
 {
-    m_outputEnableState = p_state;
+	m_outputEnableState = p_state;
 }
 
-bool PinData::getOutputState(void)
+bool PinData::getOutputState(void) const
 {
-    return m_outputState;
+	return m_outputState;
 }
 
 void PinData::setOutputState(bool p_state)
 {
-    m_outputState = p_state;
+	m_outputState = p_state;
 }
 
-bool PinData::getToggleState(void)
+bool PinData::getToggleState(void) const
 {
-    return m_toggleState;
+	return m_toggleState;
 }
 
 void PinData::setToggleState(bool p_state)
 {
-    m_toggleState = p_state;
+	m_toggleState = p_state;
 }
 

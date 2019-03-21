@@ -31,38 +31,38 @@
 class PinData
 {
 public:
-    PinData(std::string p_name,
-             int  p_type = 0,
-             bool p_inputState = false,
-             bool p_outputEnableState = false,
-             bool p_outputState = false,
-             bool p_toggleState = false);
+	PinData(std::string p_name, size_t p_chainIndex, int p_type = 0);
 
-    std::string getName(void);
+	std::string getName(void) const;
 
-    bool isPinUsable(void);
+	size_t getJtagChainIndex(void) const;
 
-    bool isInputPin(void);
-    bool isOutputPin(void);
-    bool isTristatePin(void);
+	bool isPinUsable(void) const;
 
-    bool getInputState(void);
+	bool isInput(void) const;
+	bool isOutput(void) const;
+	bool isTristate(void) const;
 
-    bool getOutputEnableState(void);
-    void setOutputEnableState(bool p_state);
+	bool getInputState(void) const;
 
-    bool getOutputState(void);
-    void setOutputState(bool p_state);
+	bool getOutputEnableState(void) const;
+	void setOutputEnableState(bool p_state);
 
-    bool getToggleState(void);
-    void setToggleState(bool p_state);
+	bool getOutputState(void) const;
+	void setOutputState(bool p_state);
+
+	bool getToggleState(void) const;
+	void setToggleState(bool p_state);
 private:
-    std::string m_name;
-    int  m_type;
-    bool m_inputState;
-    bool m_outputEnableState;
-    bool m_outputState;
-    bool m_toggleState;
+	std::string m_name;
+	int  m_type;
+
+	size_t m_chainIndex;
+
+	bool m_inputState;
+	bool m_outputEnableState;
+	bool m_outputState;
+	bool m_toggleState;
 };
 #endif /*  MODEL_PIN_DATA_H__ */
 

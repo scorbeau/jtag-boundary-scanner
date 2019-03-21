@@ -26,6 +26,7 @@
 #define MODEL_SYSTEM_DATA_H__
 
 #include <string>
+#include <vector>
 
 #include "ProbeData.h"
 #include "CpuData.h"
@@ -33,42 +34,45 @@
 class SystemData
 {
 public:
-    SystemData();
+	SystemData();
+	~SystemData();
 
-    ~SystemData();
+	const CpuData* getCpu(size_t p_index) const;
+	const ProbeData* getProbe(size_t p_index) const;
 
-    int getNbCpu(void);
-    int getNbProbe(void);
+	// Probe update methods
+	void addProbe(ProbeData* probe);
+	void cleanProbe(void);
+	size_t getNbProbe(void) const;
 
-    ProbeData* getProbe(size_t index);
-    CpuData* getCpu(size_t index);
+	// CPU update methods
+	void addCpu(CpuData* cpu);
+	void cleanCpu(void);
+	size_t getNbCpu(void) const;
+	void updateCpuName(size_t p_index, std::string p_name);
 
-    void addProbe(std::string p_name);
-    size_t setProbeConnected(size_t index);
-    size_t setProbeDisconnected(void);
-    size_t getConnectedProbe(void);
-    bool isProbeConnected(void);
-    void cleanProbe(void);
+	void addCpuPin(size_t p_cpuIndex,
+		       std::string p_name,
+		       int p_pinIndex,
+		       int p_type);
 
-    int addCpu(std::string p_name, unsigned long p_cpuid, int p_jtagid);
-    int addPin(size_t p_cpuIndex,
-               std::string p_name,
-               int  p_type,
-               bool p_inputState = false,
-               bool p_outputEnableState = false,
-               bool p_outputState = false,
-               bool p_toggleState = false);
-    int addCpu(CpuData *p_cpu);
-    void cleanCpu(void);
+	void setOutputEnableState(size_t p_cpuIndex,
+				  size_t p_gpioIndex,
+				  bool p_state);
 
+	void setOutputState(size_t p_cpuIndex,
+			    size_t p_gpioIndex,
+			    bool p_state);
+
+	void setToggleState(size_t p_cpuIndex,
+			    size_t p_gpioIndex,
+			    bool p_state);
+
+	void addCpuBsdlFile(size_t p_index, std::string p_path);
 private:
-    std::vector<ProbeData*> m_probe;
-    std::vector<CpuData*>   m_cpu;
-
-    bool m_isConnected;
-    size_t m_probeConnectedIndex;
+	std::vector<ProbeData*> m_probe;
+	std::vector<CpuData*>   m_cpu;
 };
-
 
 #endif /*  MODEL_SYSTEM_DATA_H__ */
 

@@ -26,144 +26,109 @@
 
 SystemData::SystemData()
 {
-    m_isConnected = false;
-    m_probeConnectedIndex = (size_t) -1;
 }
 
 SystemData::~SystemData()
 {
-    cleanProbe();
-    cleanCpu();
+	cleanProbe();
+	cleanCpu();
 }
 
-int SystemData::getNbCpu(void)
+const CpuData* SystemData::getCpu(size_t p_index) const
 {
-    return m_cpu.size();
+	if(p_index < m_cpu.size())
+		return m_cpu[p_index];
+	return NULL;
 }
 
-int SystemData::getNbProbe(void)
+const ProbeData* SystemData::getProbe(size_t p_index) const
 {
-    return m_probe.size();
+	if(p_index < m_probe.size())
+		return m_probe[p_index];
+
+	return NULL;
 }
 
-ProbeData* SystemData::getProbe(size_t index)
+void SystemData::addProbe(ProbeData *probe)
 {
-    if(index < m_probe.size())
-        return m_probe[index];
-
-    return NULL;
-}
-
-CpuData* SystemData::getCpu(size_t index)
-{
-    if(index < m_cpu.size())
-        return m_cpu[index];
-
-    return NULL;
+	m_probe.push_back(probe);
 }
 
 void SystemData::cleanProbe(void)
 {
-    while(!m_probe.empty())
-    {
-        ProbeData *probe = m_probe.back();
-        m_probe.pop_back();
-        delete probe;
-    }
+	while(!m_probe.empty()) {
+		ProbeData *probe = m_probe.back();
+		m_probe.pop_back();
+		delete probe;
+	}
 }
 
-void SystemData::addProbe(std::string p_name)
+size_t SystemData::getNbProbe(void) const
 {
-    ProbeData *probe = new ProbeData(p_name);
-    m_probe.push_back(probe);
+	return m_probe.size();
 }
 
-size_t SystemData::setProbeConnected(size_t index)
+void SystemData::addCpu(CpuData* cpu)
 {
-    if(index >= m_probe.size() || m_isConnected)
-        return (size_t)-1;
-
-    m_isConnected = true;
-    m_probeConnectedIndex = index;
-
-    return index;
-}
-
-size_t SystemData::setProbeDisconnected(void)
-{
-    size_t index = (size_t) -1;
-    if(!m_isConnected)
-        return (size_t) -1;
-
-    index = m_probeConnectedIndex;
-    m_probeConnectedIndex = (size_t) -1;
-    m_isConnected = false;
-
-    return index;
-}
-
-size_t SystemData::getConnectedProbe(void)
-{
-    if(m_isConnected)
-        return m_probeConnectedIndex;
-
-    return (size_t) -1;
-}
-
-bool SystemData::isProbeConnected(void)
-{
-    return m_isConnected;
-}
-
-
-int SystemData::addCpu(std::string p_name, unsigned long p_cpuid, int p_jtagid)
-{
-    CpuData *cpu = new CpuData(p_name, p_cpuid, p_jtagid);
-    m_cpu.push_back(cpu);
-
-    // Return index of CPU
-    return m_cpu.size() -1;
-}
-
-int SystemData::addPin(size_t p_cpuIndex,
-                       std::string p_name,
-                       int  p_type,
-                       bool p_inputState,
-                       bool p_outputEnableState,
-                       bool p_outputState,
-                       bool p_toggleState)
-{
-    CpuData *cpu = NULL;
-    // Cpu not in list
-    if(p_cpuIndex >= m_cpu.size())
-        return -1;
-
-    cpu = m_cpu[p_cpuIndex];
-    cpu->addPin(p_name,
-                p_type,
-                p_inputState,
-                p_outputEnableState,
-                p_outputState,
-                p_toggleState);
-
-    return 0;
-}
-
-int SystemData::addCpu(CpuData *p_cpu)
-{
-    m_cpu.push_back(p_cpu);
-
-    // Return index of CPU
-    return m_cpu.size() -1;
+	m_cpu.push_back(cpu);
 }
 
 void SystemData::cleanCpu(void)
 {
-    while(!m_cpu.empty())
-    {
-        CpuData *cpu = m_cpu.back();
-        m_cpu.pop_back();
-        delete cpu;
-    }
+	while(!m_cpu.empty()) {
+		CpuData *cpu = m_cpu.back();
+		m_cpu.pop_back();
+		delete cpu;
+	}
+}
+
+size_t SystemData::getNbCpu(void) const
+{
+	return m_cpu.size();
+}
+
+void SystemData::updateCpuName(size_t p_index, std::string p_name)
+{
+	if(p_index < m_cpu.size())
+		m_cpu[p_index]->updateCpuName(p_name);
+}
+
+void SystemData::addCpuBsdlFile(size_t p_index, std::string p_path)
+{
+	if(p_index < m_cpu.size())
+		m_cpu[p_index]->addBsdlFile(p_path);
+}
+
+void SystemData::addCpuPin(size_t p_cpuIndex,
+		       std::string p_name,
+		       int p_pinIndex,
+		       int p_type)
+{
+	if(p_cpuIndex < m_cpu.size())
+		m_cpu[p_cpuIndex]->addPin(p_name, p_pinIndex, p_type);
+}
+
+void SystemData::setOutputEnableState(size_t p_cpuIndex,
+			  size_t p_gpioIndex,
+			  bool p_state)
+{
+	if(p_cpuIndex < m_cpu.size())
+		m_cpu[p_cpuIndex]->setOutputEnableState(p_gpioIndex, p_state);
+}
+
+void SystemData::setOutputState(size_t p_cpuIndex,
+		    size_t p_gpioIndex,
+		    bool p_state)
+{
+	if(p_cpuIndex < m_cpu.size())
+		m_cpu[p_cpuIndex]->setOutputState(p_gpioIndex, p_state);
+}
+
+void SystemData::setToggleState(size_t p_cpuIndex,
+		    size_t p_gpioIndex,
+		    bool p_state)
+{
+	if(p_cpuIndex < m_cpu.size())
+		m_cpu[p_cpuIndex]->setToggleState(p_gpioIndex, p_state);
 }
 

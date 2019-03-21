@@ -24,24 +24,19 @@
 */
 #include "model/CpuData.h"
 
-CpuData::CpuData()
+CpuData::CpuData(unsigned long p_cpuId, int p_cpuJtagIndex)
 {
-    m_name = "Unknown";
-    m_jtagid = -1;
-}
-
-CpuData::CpuData(std::string p_name, unsigned long p_cpuid, int p_jtagid)
-{
-    m_name = p_name;
-    m_cpuid = p_cpuid;
-    m_jtagid = p_jtagid;
+	m_name = "Unknown";
+	m_cpuId = p_cpuId;
+	m_cpuJtagIndex = p_cpuJtagIndex;
+	m_currentBsdlIdx = (size_t)-1;
 }
 
 CpuData::~CpuData()
 {
-    while(!m_pins.empty()) {
-        PinData *pin = m_pins.back();
-        m_pins.pop_back();
+    while(!m_usablePins.empty()) {
+        PinData *pin = m_usablePins.back();
+        m_usablePins.pop_back();
         delete pin;
     }
 
@@ -53,93 +48,109 @@ CpuData::~CpuData()
     }
 }
 
+void CpuData::updateCpuId(unsigned long p_cpuId)
+{
+	m_cpuId = p_cpuId;
+}
+
+unsigned long CpuData::getCpuId(void) const
+{
+	return m_cpuId;
+}
+
+void CpuData::updateCpuName(std::string p_name)
+{
+	m_name = p_name;
+}
+
 std::string CpuData::getCpuName(void)
 {
-    return m_name;
+	return m_name;
 }
 
-unsigned long CpuData::getCpuId(void)
+int CpuData::getCpuJtagIndex(void) const
 {
-    return m_cpuid;
+	return m_cpuJtagIndex;
 }
 
-int CpuData::getJtagId(void)
+void CpuData::addBsdlFile(std::string p_bsdlFile)
 {
-    return m_jtagid;
+	m_bsdlFiles.push_back(p_bsdlFile);
 }
 
-void CpuData::addPin(std::string p_name,
-                     int  p_type,
-                     bool p_inputState,
-                     bool p_outputEnableState,
-                     bool p_outputState,
-                     bool p_toggleState)
+size_t CpuData::getNbBsdlFiles(void) const
 {
-    // Create gpio
-    PinData *pin = new PinData(p_name,
-                               p_type,
-                               p_inputState,
-                               p_outputEnableState,
-                               p_outputState,
-                               p_toggleState);
-    // Incrment if gpio is usable
-    if(pin->isPinUsable()) {
-        // Add gpio to processor
-        m_pins.push_back(pin);
-    } else {
-        m_unusablePins.push_back(pin);
-    }
+	return m_bsdlFiles.size();
 }
 
-PinData* CpuData::getPinData(size_t index)
+std::string CpuData::getBsdlFile(size_t p_index) const
 {
-    if(index < m_pins.size())
-        return m_pins[index];
+	if(p_index < m_bsdlFiles.size())
+		return m_bsdlFiles[p_index];
 
-    return NULL;
+	return "";
 }
 
-PinData* CpuData::getUnusablePinData(size_t index)
+void CpuData::setBsdlFileIndex(size_t p_index)
 {
-    if(index < m_unusablePins.size())
-        return m_unusablePins[index];
-
-    return NULL;
+	m_currentBsdlIdx = p_index;
 }
 
-void CpuData::enablePinToggle(size_t index, bool toggle)
+size_t CpuData::getBsdlFileIndex(void)
 {
-    if(index < m_pins.size())
-        m_pins[index]->setToggleState(toggle);
+	return m_currentBsdlIdx;
 }
 
-void CpuData::setPinOutput(size_t index, bool state)
+void CpuData::addPin(std::string p_name, size_t p_index, int p_type)
 {
-    if(index < m_pins.size())
-        m_pins[index]->setOutputState(state);
+	PinData *pin = new PinData(p_name, p_index, p_type);
+
+	if(pin->isPinUsable()) {
+		m_usablePins.push_back(pin);
+	} else {
+		m_unusablePins.push_back(pin);
+	}
 }
 
-void CpuData::setPinOutputEnable(size_t index, bool state)
+size_t CpuData::getNbUsablePins(void) const
 {
-    if(index < m_pins.size())
-        m_pins[index]->setOutputEnableState(state);
+	return m_usablePins.size();
 }
 
-bool CpuData::getPinToggle(size_t index)
+size_t CpuData::getNbUnusablePins(void) const
 {
-    if(index < m_pins.size())
-        return m_pins[index]->getInputState();
-
-    return false;
+	return m_unusablePins.size();
 }
 
-size_t CpuData::getNbPins(void)
+const PinData* CpuData::getUsablePin(size_t p_index) const
 {
-    return m_pins.size() + m_unusablePins.size();
+	if(p_index < m_usablePins.size())
+		return m_usablePins[p_index];
+	return NULL;
 }
 
-size_t CpuData::getNbUsablePins(void)
+const PinData* CpuData::getUnusablePin(size_t p_index) const
 {
-    return m_pins.size();
+	if(p_index < m_unusablePins.size())
+		return m_unusablePins[p_index];
+	return NULL;
+}
+
+void CpuData::setOutputEnableState(size_t p_gpioIndex, bool p_state)
+{
+	if(p_gpioIndex < m_usablePins.size())
+		m_usablePins[p_gpioIndex]->setOutputEnableState(p_state);
+}
+
+void CpuData::setOutputState(size_t p_gpioIndex, bool p_state)
+{
+	if(p_gpioIndex < m_usablePins.size())
+		m_usablePins[p_gpioIndex]->setOutputState(p_state);
+}
+
+void CpuData::setToggleState(size_t p_gpioIndex, bool p_state)
+{
+	if(p_gpioIndex < m_usablePins.size())
+		m_usablePins[p_gpioIndex]->setToggleState(p_state);
 }
 

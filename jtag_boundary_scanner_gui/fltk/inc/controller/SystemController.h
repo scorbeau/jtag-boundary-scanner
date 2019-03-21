@@ -18,31 +18,43 @@
  */
 
 /**
-* @file   wxWidgetsInc.h
-* @brief  wxWidgets includes.
+* @file   SystemController.h
+* @brief  Define class SystemController.
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
-#ifndef GUI_WX_WIDGETS_INC_H__
-#define GUI_WX_WIDGETS_INC_H__
+#ifndef SYSTEM_CONTROLLER_H__
+#define SYSTEM_CONTROLLER_H__
 
-#include <wx/wxprec.h>
+#include <string>
 
-#ifndef WX_PRECOMP
-    #include <wx/app.h>
-    #include <wx/frame.h>
-    #include <wx/image.h>
-    #include <wx/menu.h>
-    #include <wx/msgdlg.h>
-    #include <wx/sizer.h>
-    #include <wx/panel.h>
-    #include <wx/stattext.h>
-    #include <wx/notebook.h>
-    #include <wx/combobox.h>
-    #include <wx/button.h>
-    #include <wx/checkbox.h>
-    #include <wx/filedlg.h>
-    #include <wx/scrolwin.h>
-#endif
+#include <jtag_core.h>
+#include "model/SystemData.h"
 
-#endif /* GUI_WX_WIDGETS_INC_H__ */
+class SystemController
+{
+public:
+	SystemController();
+	~SystemController();
+
+	const SystemData* getSystemData(void) const;
+
+	int initJtagCore(void);
+	int refreshProbeList(void);
+
+	int scanProcessor(size_t p_probeIndex);
+
+	int loadCpuBsdl(size_t p_cpuIndex, size_t p_bsdlIndex);
+
+	int createCpuFromBsdl(std::string p_bsdlPath);
+private:
+	int searchBsdlFiles(void);
+	int checkAddBsdlFiles(std::string p_bsdlPath);
+	int loadBsdlFile(size_t p_cpuIndex, size_t p_bsdlIndex);
+	int loadPinsFromBsdl(size_t p_index);
+
+	SystemData *m_systemData;
+	jtag_core  *m_jtagCore;
+};
+
+#endif /*  SYSTEM_CONTROLLER_H__ */
 

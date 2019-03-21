@@ -30,16 +30,15 @@
 class ProbeData
 {
 public:
-    ProbeData();
-    ProbeData(std::string p_name);
+	ProbeData(std::string p_name, int p_driverId, int p_probeId);
+	~ProbeData();
 
-    bool isConnect(void);
-    void setConnect(bool p_connect);
+	std::string getName(void) const;
+	int getIdentifier(void) const;
 
-    std::string getName(void);
 private:
-    bool m_connect;
-    std::string m_name;
+	std::string m_name;
+	int m_identifier;
 };
 
 

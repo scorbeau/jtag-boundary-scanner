@@ -33,40 +33,44 @@
 class CpuData
 {
 public:
-    CpuData();
-    CpuData(std::string p_name, unsigned long p_cpuid, int p_jtagid);
-    ~CpuData();
+	CpuData(unsigned long p_cpuId = 0, int p_cpuJtagIndex = -1);
+	~CpuData();
 
-    std::string getCpuName(void);
+	void updateCpuId(unsigned long p_cpuId);
+	unsigned long getCpuId(void) const;
 
-    unsigned long getCpuId(void);
-    int getJtagId(void);
+	int getCpuJtagIndex(void) const;
 
-    void addPin(std::string p_name,
-                int  p_type = 0,
-                bool p_inputState = false,
-                bool p_outputEnableState = false,
-                bool p_outputState = false,
-                bool p_toggleState = false);
+	void updateCpuName(std::string p_name);
+	std::string getCpuName(void);
 
-    PinData* getPinData(size_t index);
-    PinData* getUnusablePinData(size_t index);
+	void addBsdlFile(std::string p_bsdlFile);
+	size_t getNbBsdlFiles(void) const;
+	std::string getBsdlFile(size_t p_index) const;
+	void setBsdlFileIndex(size_t p_index);
+	size_t getBsdlFileIndex(void);
 
-    void enablePinToggle(size_t index, bool toggle = true);
-    void setPinOutput(size_t index, bool state = true);
-    void setPinOutputEnable(size_t index, bool state = true);
-    bool getPinToggle(size_t index);
+	void addPin(std::string p_name, size_t p_index, int p_type = 0);
+	size_t getNbUsablePins(void) const;
+	size_t getNbUnusablePins(void) const;
 
-    size_t getNbPins(void);
+	const PinData* getUsablePin(size_t p_index) const;
+	const PinData* getUnusablePin(size_t p_index) const;
 
-    size_t getNbUsablePins(void);
+	void setOutputEnableState(size_t p_gpioIndex, bool p_state);
+	void setOutputState(size_t p_gpioIndex, bool p_state);
+	void setToggleState(size_t p_gpioIndex, bool p_state);
+
 private:
-    std::string m_name;
-    std::vector<PinData*> m_pins;
-    std::vector<PinData*> m_unusablePins;
+	unsigned long m_cpuId;
+	int m_cpuJtagIndex;
+	std::string m_name;
 
-    unsigned long m_cpuid;
-    int m_jtagid;
+	size_t m_currentBsdlIdx;
+
+	std::vector<std::string> m_bsdlFiles;
+	std::vector<PinData*> m_usablePins;
+	std::vector<PinData*> m_unusablePins;
 };
 
 #endif /*  MODEL_CPU_DATA_H__ */
