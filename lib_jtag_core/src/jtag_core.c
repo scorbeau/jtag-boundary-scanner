@@ -358,6 +358,21 @@ unsigned long jtagcore_get_bsdl_id(jtag_core * jc, const char * path)
 	return 0;
 }
 
+int jtagcore_get_bsdl_dev_name(jtag_core * jc, const char * path, char * devname)
+{
+	jtag_bsdl * bsdl_file;
+
+	bsdl_file = load_bsdlfile(jc,path);
+	if (bsdl_file)
+	{
+		strcpy(devname, bsdl_file->entity_name);
+		unload_bsdlfile(jc,bsdl_file);
+		return 0;
+	}
+
+	return -1;
+}
+
 int jtagcore_get_dev_name(jtag_core * jc, int device, char * devname, char * bsdlpath)
 {
 	jtag_bsdl * bsdl_file;
@@ -1032,6 +1047,12 @@ int jtagcore_select_and_open_probe(jtag_core * jc, int probe_id)
 	}
 
 	return JTAG_CORE_BAD_PARAMETER;
+}
+
+// TODO:Implement it
+int jtagcore_close_probe(jtag_core * jc)
+{
+	return 0;
 }
 
 void jtagcore_deinit(jtag_core * jc)

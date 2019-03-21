@@ -78,7 +78,7 @@ int jtagcore_loaddriver(jtag_core * jc, int id, char * parameters)
 	int i,ret;
 	i = 0;
 
-	while (staticdrvs[i].getinfosfunc != (DRV_GETMODULEINFOS)0xFFFFFFFF )
+	while (staticdrvs[i].getinfosfunc != (DRV_GETMODULEINFOS) -1)
 	{
 		i++;
 	}
@@ -106,8 +106,9 @@ int jtagcore_loaddriver(jtag_core * jc, int id, char * parameters)
 				jtagcore_logs_printf(jc, MSG_INFO_0, "jtagcore_loaddriver : Probe Driver 0x%.8X loaded...\r\n", id);
 			}
 		}
-		else
+		else {
 			goto fail;
+		}
 
 		return ret;
 	}

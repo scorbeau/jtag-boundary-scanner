@@ -68,8 +68,11 @@ static drv_desc subdrv_list[]=
 	{"USB_OLIMEX_ARM_OCD","USB Olimex ARM USB OCD",PROBE_OLIMEX_OCD,0}
 };
 
-
+#if defined(__linux__)
+static HANDLE lib_handle = 0;
+#else
 static HMODULE lib_handle = 0;
+#endif
 
 static FT_HANDLE ftdih = NULL;
 static FT_DEVICE ftdi_device;
@@ -96,6 +99,7 @@ int Sleep( unsigned int timeout_ms )
         select(0, NULL, NULL, NULL, &tv);
         return 0;
 }
+
 #endif
 
 

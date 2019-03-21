@@ -4,17 +4,20 @@ AR = ar
 UNAME := $(shell uname)
 
 BASEDIR=../../src
-INCLUDES = -I$(BASEDIR)/
 
-CFLAGS=-O3 $(INCLUDES) -Wall
+WINAPI_PATH=../../../lib-winapi-compat
 
-LDFLAGS= -g -shared -lc -lm  -ldl
+INCLUDES = -I$(BASEDIR)/ -I$(WINAPI_PATH)/include
+
+CFLAGS=-Og $(INCLUDES) -Wall
+
+LDFLAGS= -g -shared -lc -lm  -ldl -L$(WINAPI_PATH)/libs -lwinapi-compat-static
 
 STATIC_LIB=libjtag-core-static.a
-DYNAMIC_LIB=libjtag-core.so
+#DYNAMIC_LIB=libjtag-core.so
 
 ifeq ($(UNAME), Linux)
-CFLAGS += -fPIC
+#CFLAGS += -fPIC
 endif
 
 ifeq ($(findstring CYGWIN,$(shell uname)),CYGWIN)
@@ -28,7 +31,7 @@ LDFLAGS +=-arch i386 -dynamiclib -current_version 2.0 -install_name @executable_
 DYNAMIC_LIB=lib_jtag_core.dylib
 endif
 
-PROBES_DRIVERS = #lpt_jtag_drv.o jlink_jtag_drv.o ftdi_jtag_drv.o
+PROBES_DRIVERS = jlink_jtag_drv.o #ftdi_jtag_drv.o #lpt_jtag_drv.o
 PROTOCOLS_DRIVERS = i2c_over_jtag.o mdio_over_jtag.o spi_over_jtag.o memory_over_jtag.o
 
 all: $(STATIC_LIB) $(DYNAMIC_LIB)

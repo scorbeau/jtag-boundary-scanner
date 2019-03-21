@@ -71,7 +71,7 @@ int jtagcore_set_logs_level(jtag_core * jc,int level);
 int jtagcore_get_number_of_probes_drv(jtag_core * jc);
 int jtagcore_get_number_of_probes(jtag_core * jc, int probe_driver_id);
 
-#define PROBE_ID(drv_id,probe_index) ( (drv_id<<8) | probe_index )
+#define PROBE_ID(drv_id,probe_index) ( (drv_id<<8) | (probe_index&0xFF) )
 
 // jtagcore_get_probe_name : Return the probe name (probe_id should be between 0 and "number of supported probes" - 1)
 
@@ -80,6 +80,9 @@ int jtagcore_get_probe_name(jtag_core * jc, int probe_id, char * name);
 // jtagcore_select_and_open_probe : Try to init the probe (probe_id should be between 0 and "number of supported probes" - 1)
 
 int jtagcore_select_and_open_probe(jtag_core * jc, int probe_id);
+
+// jtagcore_close_probe: Deinit properly current selected probe.
+int jtagcore_close_probe(jtag_core * jc);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JTAG Chain init functions
@@ -108,6 +111,10 @@ int jtagcore_get_dev_name(jtag_core * jc, int device, char * devname, char * bsd
 // jtagcore_get_bsdl_id : Return the chip id present into a bsdl file
 
 unsigned long jtagcore_get_bsdl_id(jtag_core * jc, const char * path);
+
+// jtagcore_get_bsdl_name : Return the device name present into a bsdl file
+// "devname" should be point to 512bytes memory array.
+int jtagcore_get_bsdl_dev_name(jtag_core * jc, const char * path, char * devname);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Pins/IO access functions
