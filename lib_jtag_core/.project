@@ -3,6 +3,7 @@
 	<name>lib_jtag_core</name>
 	<comment></comment>
 	<projects>
+		<project>lib-winapi-compat</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
