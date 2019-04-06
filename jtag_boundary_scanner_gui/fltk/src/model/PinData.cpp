@@ -43,7 +43,7 @@ std::string PinData::getName(void) const
 	return m_name;
 }
 
-size_t PinData::getJtagChainIndex(void) const
+size_t PinData::getPinJtagChainIndex(void) const
 {
 	return m_chainIndex;
 }
@@ -71,6 +71,11 @@ bool PinData::isTristate(void) const
 bool PinData::getInputState(void) const
 {
 	return m_inputState;
+}
+
+void PinData::updateInputState(bool p_state)
+{
+	m_inputState = p_state;
 }
 
 bool PinData::getOutputEnableState(void) const

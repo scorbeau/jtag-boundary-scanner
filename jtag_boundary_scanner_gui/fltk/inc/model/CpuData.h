@@ -42,7 +42,7 @@ public:
 	int getCpuJtagIndex(void) const;
 
 	void updateCpuName(std::string p_name);
-	std::string getCpuName(void);
+	std::string getCpuName(void) const;
 
 	void addBsdlFile(std::string p_bsdlFile);
 	size_t getNbBsdlFiles(void) const;
@@ -53,13 +53,16 @@ public:
 	void addPin(std::string p_name, size_t p_index, int p_type = 0);
 	size_t getNbUsablePins(void) const;
 	size_t getNbUnusablePins(void) const;
+	size_t getNbPins(void) const;
 
 	const PinData* getUsablePin(size_t p_index) const;
 	const PinData* getUnusablePin(size_t p_index) const;
+	const PinData* getChainPin(size_t p_index) const;
 
 	void setOutputEnableState(size_t p_gpioIndex, bool p_state);
 	void setOutputState(size_t p_gpioIndex, bool p_state);
 	void setToggleState(size_t p_gpioIndex, bool p_state);
+	void updateInputState(size_t p_gpioIndex, bool p_state);
 
 private:
 	unsigned long m_cpuId;
@@ -71,6 +74,7 @@ private:
 	std::vector<std::string> m_bsdlFiles;
 	std::vector<PinData*> m_usablePins;
 	std::vector<PinData*> m_unusablePins;
+	std::vector<PinData*> m_chainPins;
 };
 
 #endif /*  MODEL_CPU_DATA_H__ */

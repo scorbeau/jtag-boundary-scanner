@@ -35,7 +35,7 @@ public:
 
 	std::string getName(void) const;
 
-	size_t getJtagChainIndex(void) const;
+	size_t getPinJtagChainIndex(void) const;
 
 	bool isPinUsable(void) const;
 
@@ -44,6 +44,7 @@ public:
 	bool isTristate(void) const;
 
 	bool getInputState(void) const;
+	void updateInputState(bool p_state);
 
 	bool getOutputEnableState(void) const;
 	void setOutputEnableState(bool p_state);

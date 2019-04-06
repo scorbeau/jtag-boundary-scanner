@@ -68,6 +68,10 @@ public:
 			    size_t p_gpioIndex,
 			    bool p_state);
 
+	void updateInputState(size_t p_cpuIndex,
+						  size_t p_gpioIndex,
+						  bool p_state);
+
 	void addCpuBsdlFile(size_t p_index, std::string p_path);
 private:
 	std::vector<ProbeData*> m_probe;

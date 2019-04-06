@@ -132,3 +132,10 @@ void SystemData::setToggleState(size_t p_cpuIndex,
 		m_cpu[p_cpuIndex]->setToggleState(p_gpioIndex, p_state);
 }
 
+void SystemData::updateInputState(size_t p_cpuIndex,
+								  size_t p_gpioIndex,
+								  bool p_state)
+{
+	if(p_cpuIndex < m_cpu.size())
+		m_cpu[p_cpuIndex]->updateInputState(p_gpioIndex, p_state);
+}

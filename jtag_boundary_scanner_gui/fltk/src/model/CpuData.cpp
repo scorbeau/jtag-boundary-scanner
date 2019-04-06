@@ -63,7 +63,7 @@ void CpuData::updateCpuName(std::string p_name)
 	m_name = p_name;
 }
 
-std::string CpuData::getCpuName(void)
+std::string CpuData::getCpuName(void) const
 {
 	return m_name;
 }
@@ -105,6 +105,8 @@ void CpuData::addPin(std::string p_name, size_t p_index, int p_type)
 {
 	PinData *pin = new PinData(p_name, p_index, p_type);
 
+	m_chainPins.push_back(pin);
+
 	if(pin->isPinUsable()) {
 		m_usablePins.push_back(pin);
 	} else {
@@ -122,6 +124,11 @@ size_t CpuData::getNbUnusablePins(void) const
 	return m_unusablePins.size();
 }
 
+size_t CpuData::getNbPins(void) const
+{
+	return m_chainPins.size();
+}
+
 const PinData* CpuData::getUsablePin(size_t p_index) const
 {
 	if(p_index < m_usablePins.size())
@@ -136,21 +143,40 @@ const PinData* CpuData::getUnusablePin(size_t p_index) const
 	return NULL;
 }
 
+const PinData* CpuData::getChainPin(size_t p_index) const
+{
+	if(p_index < m_chainPins.size())
+		return m_chainPins[p_index];
+	return NULL;
+}
+
 void CpuData::setOutputEnableState(size_t p_gpioIndex, bool p_state)
 {
-	if(p_gpioIndex < m_usablePins.size())
-		m_usablePins[p_gpioIndex]->setOutputEnableState(p_state);
+	if(p_gpioIndex < m_chainPins.size()) {
+		if(m_chainPins[p_gpioIndex]->isTristate())
+			m_chainPins[p_gpioIndex]->setOutputEnableState(p_state);
+	}
 }
 
 void CpuData::setOutputState(size_t p_gpioIndex, bool p_state)
 {
-	if(p_gpioIndex < m_usablePins.size())
-		m_usablePins[p_gpioIndex]->setOutputState(p_state);
+	if(p_gpioIndex < m_chainPins.size()) {
+		if(m_chainPins[p_gpioIndex]->isOutput())
+			m_chainPins[p_gpioIndex]->setOutputState(p_state);
+	}
 }
 
 void CpuData::setToggleState(size_t p_gpioIndex, bool p_state)
 {
-	if(p_gpioIndex < m_usablePins.size())
-		m_usablePins[p_gpioIndex]->setToggleState(p_state);
+	if(p_gpioIndex < m_chainPins.size()) {
+		if(m_chainPins[p_gpioIndex]->isOutput())
+			m_chainPins[p_gpioIndex]->setToggleState(p_state);
+	}
 }
 
+void CpuData::updateInputState(size_t p_gpioIndex, bool p_state){
+	if(p_gpioIndex < m_chainPins.size()) {
+		if(m_chainPins[p_gpioIndex]->isInput())
+			m_chainPins[p_gpioIndex]->updateInputState(p_state);
+	}
+}

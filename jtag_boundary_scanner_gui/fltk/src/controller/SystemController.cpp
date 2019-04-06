@@ -22,9 +22,14 @@
 * @brief  Implement class SystemController model.
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
+//TODO: Delete stdio if not used
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
 #include "controller/SystemController.h"
+#include "gui/CpuTab.h"
 
 #if defined(WIN32) || defined(_WIN32)
 	#include <windows.h>
@@ -34,10 +39,16 @@
 	#error "This programs only runs on Windows or Linux"
 #endif
 
+static void *refresh_thread_process(void * arg);
+
 SystemController::SystemController()
 {
 	m_jtagCore = NULL;
 	m_systemData = new SystemData();
+	m_application = new MainWindow(this, "JTAG Boundary Scanner");
+	m_threadRunning = false;
+	m_threadMutex = PTHREAD_MUTEX_INITIALIZER;
+	m_thread = 0;
 }
 
 SystemController::~SystemController()
@@ -79,7 +90,7 @@ int SystemController::refreshProbeList(void)
 			err = jtagcore_get_probe_name(m_jtagCore,
 						      PROBE_ID(i, j),
 						      buffer);
-#if 0
+#if 1
 			printf("Drv[%d]/Probe[%d] : Name=%s err=%d\n",
 				i,
 				j,
@@ -157,7 +168,7 @@ int SystemController::searchBsdlFiles(void)
 		size--;
 	currentPath[size] = '\0';
 	strncat(currentPath,"/bsdl_files/", sizeof(currentPath));
-	//printf("BSDL path %s\n", currentPath);
+	printf("BSDL path %s\n", currentPath);
 
 	// Scan and check files in the folder.
 	hFind = FindFirstFile(currentPath, &fileData);
@@ -230,23 +241,50 @@ int SystemController::loadCpuBsdl(size_t p_cpuIndex, size_t p_bsdlIndex)
 	return loadBsdlFile(p_cpuIndex, p_bsdlIndex);
 }
 
-int SystemController::createCpuFromBsdl(std::string p_bsdlPath)
+CpuData* SystemController::createCpuFromBsdl(std::string p_bsdlPath)
 {
+	CpuData *cpu = 0;
 	int err = -1;
 	unsigned long bsdlChipId = 0;
-	char devName[512];
+	char buffer[512];
+	int  type;
+	int nbPins = 0;
+	int i;
 
 	bsdlChipId = jtagcore_get_bsdl_id(m_jtagCore, p_bsdlPath.c_str());
 	if(bsdlChipId) {
+		err = jtagcore_loadbsdlfile(m_jtagCore,
+									p_bsdlPath.c_str(),
+									-1);
+	}
+	if(!err) {
 		err = jtagcore_get_bsdl_dev_name(m_jtagCore,
-						 p_bsdlPath.c_str(),
-						 devName);
+										 p_bsdlPath.c_str(),
+										 buffer);
 	}
 
 	if(!err) {
-		
+		//printf("Device name %s\n", buffer);
+		cpu = new CpuData(bsdlChipId);
+		cpu->updateCpuName(std::string(buffer));
+		nbPins = jtagcore_get_number_of_pins(m_jtagCore, 0);
+		//printf("Nb pins %d\n", nbPins);
+
+		for(i=0; i<nbPins; i++) {
+			err = jtagcore_get_pin_properties(m_jtagCore,
+						0,
+						i,
+						buffer,
+						sizeof(buffer),
+						&type);
+			if(!err) {
+				//printf("Name %s type %d\r\n", buffer, type);
+				cpu->addPin(std::string(buffer), i, type);
+			}
+		}
 	}
-	return 0;
+
+	return cpu;
 }
 
 int SystemController::loadBsdlFile(size_t p_cpuIndex, size_t p_bsdlIndex)
@@ -273,7 +311,7 @@ int SystemController::loadBsdlFile(size_t p_cpuIndex, size_t p_bsdlIndex)
 					NULL);
 	}
 	if(!err) {
-		//printf("Processor name %s err %d\n", buffer, err);
+		printf("Processor name %s err %d\n", buffer, err);
 		m_systemData->updateCpuName(p_cpuIndex, std::string(buffer));
 
 		loadPinsFromBsdl(p_cpuIndex);
@@ -316,3 +354,113 @@ int SystemController::loadPinsFromBsdl(size_t p_index)
 	return 0;
 }
 
+void SystemController::startJtagRefreshThread(void)
+{
+	pthread_attr_t thread_attr;
+
+	pthread_mutex_lock(&m_threadMutex);
+	/* Thread already run */
+	if(m_threadRunning) {
+		pthread_mutex_unlock(&m_threadMutex);
+		printf("Thread already start\n");
+		return;
+	}
+
+	pthread_attr_init (&thread_attr);
+	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
+	pthread_create(&m_thread, &thread_attr, refresh_thread_process, this);
+
+	m_threadRunning = true;
+	pthread_mutex_unlock(&m_threadMutex);
+}
+
+void SystemController::stopJtagRefreshThread(void)
+{
+	void *ret;
+
+	pthread_mutex_lock(&m_threadMutex);
+	if(!m_threadRunning) {
+		pthread_mutex_unlock(&m_threadMutex);
+		printf("Thread not running\n");
+		return;
+	}
+	pthread_cancel(m_thread);
+
+	(void)pthread_join(m_thread, &ret);
+
+	m_threadRunning = false;
+	pthread_mutex_unlock(&m_threadMutex);
+}
+
+int SystemController::runApplication(void)
+{
+	//TODO: Run IHM
+	return m_application->run();
+}
+
+void SystemController::refreshCpuPin(void)
+{
+	CpuTab *tab = m_application->getCurrentCpuTab();
+	const CpuData *cpu;
+	size_t cpuIndex = (size_t)-1;
+	int state = -1;
+
+	if(!tab)
+		return;
+
+	if((size_t)-1 == (cpuIndex = (size_t) tab->getCpuIndex()))
+		return;
+
+	printf("Cpu tab index %ld\n", cpuIndex);
+
+	cpu = m_systemData->getCpu(cpuIndex);
+	if(!cpu)
+		return;
+
+	state = jtagcore_push_and_pop_chain(m_jtagCore, JTAG_CORE_WRITE_READ);
+	if(state != JTAG_CORE_NO_ERROR)
+		return;
+
+	for(size_t i=0; i<cpu->getNbUsablePins(); i++)
+	{
+		const PinData *pin = cpu->getUsablePin(i);
+		if(!pin)
+			continue;
+		if(pin->isInput()) {
+			state = jtagcore_get_pin_state(m_jtagCore,
+										   cpuIndex,
+										   pin->getPinJtagChainIndex(),
+										   JTAG_CORE_INPUT);
+			if(state == 0) {
+				m_systemData->updateInputState(cpuIndex,
+											   pin->getPinJtagChainIndex(),
+											   false);
+			} else if(state>0) {
+				m_systemData->updateInputState(cpuIndex,
+											   pin->getPinJtagChainIndex(),
+											   true);
+			}
+		}
+	}
+	m_application->refresh();
+}
+
+static void *refresh_thread_process(void * arg)
+{
+	SystemController *ctrl = (SystemController *) arg;
+
+	if(!ctrl)
+		printf("Controller null\n");
+
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+	while(1) {
+		Sleep(5000);
+		printf("Refresh CPU pin\n");
+		if(ctrl)
+			ctrl->refreshCpuPin();
+	}
+
+	pthread_exit (0);
+}

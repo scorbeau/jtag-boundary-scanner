@@ -27,8 +27,11 @@
 
 #include <string>
 
+#include <pthread.h>
+
 #include <jtag_core.h>
 #include "model/SystemData.h"
+#include "gui/MainWindow.h"
 
 class SystemController
 {
@@ -40,12 +43,17 @@ public:
 
 	int initJtagCore(void);
 	int refreshProbeList(void);
-
 	int scanProcessor(size_t p_probeIndex);
-
 	int loadCpuBsdl(size_t p_cpuIndex, size_t p_bsdlIndex);
 
-	int createCpuFromBsdl(std::string p_bsdlPath);
+	CpuData* createCpuFromBsdl(std::string p_bsdlPath);
+
+	void startJtagRefreshThread(void);
+	void stopJtagRefreshThread(void);
+
+	void refreshCpuPin(void);
+
+	int runApplication(void);
 private:
 	int searchBsdlFiles(void);
 	int checkAddBsdlFiles(std::string p_bsdlPath);
@@ -54,6 +62,12 @@ private:
 
 	SystemData *m_systemData;
 	jtag_core  *m_jtagCore;
+	MainWindow *m_application;
+
+	// Thread data
+	bool m_threadRunning;
+	pthread_t m_thread;
+	pthread_mutex_t m_threadMutex;
 };
 
 #endif /*  SYSTEM_CONTROLLER_H__ */

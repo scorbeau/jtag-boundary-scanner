@@ -3,6 +3,8 @@
 	<name>fltk</name>
 	<comment></comment>
 	<projects>
+		<project>lib_jtag_core</project>
+		<project>lib-winapi-compat</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
