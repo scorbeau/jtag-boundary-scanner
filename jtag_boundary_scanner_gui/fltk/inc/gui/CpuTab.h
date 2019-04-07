@@ -44,9 +44,10 @@ public:
 	~CpuTab();
 	void refresh(void);
 	int getCpuIndex(void);
+	const CpuPinCheckBox* getPinCheckBoxes(size_t p_index) const;
 private:
 	const SystemData *m_systemData;
-	std::vector<CpuPinCheckBox*> m_cpuPin;
+	std::vector<CpuPinCheckBox*> m_cpuPinCheckBoxes;
 	size_t m_cpuIndex;
 };
 
