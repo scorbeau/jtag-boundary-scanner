@@ -38,12 +38,12 @@
 //TODO: Delete
 #include <string>
 
-static const int PIN_NAME_WIDTH = 150;
+static const int PIN_NAME_WIDTH = 130;
 static const int CHK_BOX_WIDTH = 25;
 static const int ITEM_HEIGHT = 15;
 static const int MAX_NB_COLUMN = 8;
 static const int MIN_GPIO_BY_COLUMN = 10;
-static const int BOX_MARGIN = 10;
+static const int BOX_MARGIN = 1;
 static const int CHKBOX_MARGIN = 20;
 
 CpuTab::CpuTab(MainWindow *p_win,
@@ -60,6 +60,13 @@ CpuTab::CpuTab(MainWindow *p_win,
 	size_t nb_usable_gpio = 0;
 	size_t nb_column = 0;
 	int nb_gpio_per_column = 0;
+	size_t i=0;
+	Fl_Box *pinNameTitle = 0;
+	Fl_Box *outputTitle = 0;
+	Fl_Box *outputEnTitle = 0;
+	Fl_Box *inputTitle = 0;
+	Fl_Box *toggleTitle = 0;
+
 	//int height = 0;
 
 	m_cpuIndex = p_cpuIndex;
@@ -92,58 +99,166 @@ CpuTab::CpuTab(MainWindow *p_win,
 		if(!p_label)
 			copy_label(cpu->getCpuName().c_str());
 
-		Fl_Box *column = new Fl_Box(FL_ENGRAVED_BOX,
-											scroll->x()+BOX_MARGIN,
+		for(i=0; i<nb_gpio; i++) {
+			const PinData *pin = cpu->getUsablePin(i);
+			Fl_Check_Button *outputChkBox = 0;
+			Fl_Check_Button *outputEnChkBox = 0;
+			Fl_Check_Button *inputChkBox = 0;
+			Fl_Check_Button *toggleChkBox = 0;
+
+			if(0 == (i%nb_gpio_per_column)) {
+				Fl_Box *column = new Fl_Box(FL_ENGRAVED_BOX,
+											scroll->x()+BOX_MARGIN+((i/nb_gpio_per_column)*(PIN_NAME_WIDTH+4*CHK_BOX_WIDTH)),
 											scroll->y()+BOX_MARGIN,
 											PIN_NAME_WIDTH+4*CHK_BOX_WIDTH,
-											(cpu->getNbUsablePins()+1)*(CHKBOX_MARGIN),
+											(nb_gpio_per_column+1)*(CHKBOX_MARGIN),
 											"");
-		scroll->add(column);
+				scroll->add(column);
 
-		Fl_Box *pinNameTitle  = new Fl_Box(FL_FRAME_BOX,
-										   column->x(),
-										   column->y(),
-										   PIN_NAME_WIDTH,
-										   ITEM_HEIGHT,
-										   "Pin");
-		pinNameTitle->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-		scroll->add(pinNameTitle);
-		Fl_Box *outputTitle  = new Fl_Box(FL_FRAME_BOX,
-										  pinNameTitle->x()+pinNameTitle->w(),
+				pinNameTitle = new Fl_Box(FL_FRAME_BOX,
+										  column->x(),
 										  column->y(),
-										  CHK_BOX_WIDTH,
+										  PIN_NAME_WIDTH,
 										  ITEM_HEIGHT,
-										  "O");
-		outputTitle->align(FL_ALIGN_INSIDE);
-		scroll->add(outputTitle);
-		Fl_Box *outputEnTitle  = new Fl_Box(FL_FRAME_BOX,
-											outputTitle->x()+outputTitle->w(),
-											column->y(),
-											CHK_BOX_WIDTH,
-											ITEM_HEIGHT,
-											"OE");
-		outputEnTitle->align(FL_ALIGN_INSIDE);
-		scroll->add(outputEnTitle);
-		Fl_Box *inputTitle  = new Fl_Box(FL_FRAME_BOX,
-										 outputEnTitle->x()+outputEnTitle->w(),
+										  "Pin");
+				pinNameTitle->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+				scroll->add(pinNameTitle);
+				outputTitle = new Fl_Box(FL_FRAME_BOX,
+										 pinNameTitle->x()+pinNameTitle->w(),
 										 column->y(),
 										 CHK_BOX_WIDTH,
 										 ITEM_HEIGHT,
-										 "I");
+										 "O");
+				outputTitle->align(FL_ALIGN_INSIDE);
+				scroll->add(outputTitle);
+				outputEnTitle = new Fl_Box(FL_FRAME_BOX,
+										   outputTitle->x()+outputTitle->w(),
+										   column->y(),
+										   CHK_BOX_WIDTH,
+										   ITEM_HEIGHT,
+										   "OE");
+				outputEnTitle->align(FL_ALIGN_INSIDE);
+				scroll->add(outputEnTitle);
+				inputTitle = new Fl_Box(FL_FRAME_BOX,
+										outputEnTitle->x()+outputEnTitle->w(),
+										column->y(),
+										CHK_BOX_WIDTH,
+										ITEM_HEIGHT,
+										"I");
+				inputTitle->align(FL_ALIGN_INSIDE);
+				scroll->add(inputTitle);
+				toggleTitle = new Fl_Box(FL_FRAME_BOX,
+										 inputTitle->x()+inputTitle->w(),
+										 column->y(),
+										 CHK_BOX_WIDTH,
+										 ITEM_HEIGHT,
+										 "T");
+				toggleTitle->align(FL_ALIGN_INSIDE);
+				scroll->add(toggleTitle);
+			}
+			Fl_Box *pinNameLbl = new Fl_Box(pinNameTitle->x(),
+											pinNameTitle->y()+pinNameTitle->h()+((i%nb_gpio_per_column)*CHKBOX_MARGIN),
+											PIN_NAME_WIDTH,
+											ITEM_HEIGHT);
+			pinNameLbl->copy_label(pin->getName().c_str());
+			pinNameLbl->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+			scroll->add(pinNameLbl);
+
+			if(pin->isOutput()) {
+				outputChkBox = new Fl_Check_Button(
+							pinNameLbl->x()+pinNameLbl->w(),
+							pinNameLbl->y(),
+							CHK_BOX_WIDTH,
+							ITEM_HEIGHT);
+				scroll->add(outputChkBox);
+			}
+
+			if(pin->isTristate()) {
+				outputEnChkBox = new Fl_Check_Button(
+							pinNameLbl->x()+pinNameLbl->w()+CHK_BOX_WIDTH,
+							pinNameLbl->y(),
+							CHK_BOX_WIDTH,
+							ITEM_HEIGHT);
+				scroll->add(outputEnChkBox);
+			}
+
+			if(pin->isInput()) {
+				inputChkBox = new Fl_Check_Button(
+							pinNameLbl->x()+pinNameLbl->w()+(2*CHK_BOX_WIDTH),
+							pinNameLbl->y(),
+							CHK_BOX_WIDTH,
+							ITEM_HEIGHT);
+				inputChkBox->deactivate();
+				scroll->add(inputChkBox);
+			}
+
+			if(pin->isOutput() || pin->isTristate())
+			{
+				toggleChkBox = new Fl_Check_Button(
+							pinNameLbl->x()+pinNameLbl->w()+(3*CHK_BOX_WIDTH),
+							pinNameLbl->y(),
+							CHK_BOX_WIDTH,
+							ITEM_HEIGHT);
+				toggleChkBox->align(FL_ALIGN_CENTER);
+				scroll->add(toggleChkBox);
+			}
+
+			// Save check button
+			m_cpuPinCheckBoxes.push_back(new CpuPinCheckBox(outputChkBox,
+						outputEnChkBox, inputChkBox, toggleChkBox));
+		}
+	}
+
+	// Display last gpio if necessary
+	if(nb_usable_gpio-nb_gpio) {
+		Fl_Box *column = new Fl_Box(FL_ENGRAVED_BOX,
+									scroll->x()+BOX_MARGIN+((nb_gpio/nb_gpio_per_column)*(PIN_NAME_WIDTH+4*CHK_BOX_WIDTH)),
+									scroll->y()+BOX_MARGIN,
+									PIN_NAME_WIDTH+4*CHK_BOX_WIDTH,
+									(nb_gpio_per_column+1)*(CHKBOX_MARGIN),
+									"");
+		scroll->add(column);
+		pinNameTitle = new Fl_Box(FL_FRAME_BOX,
+								  column->x(),
+								  column->y(),
+								  PIN_NAME_WIDTH,
+								  ITEM_HEIGHT,
+								  "Pin");
+		pinNameTitle->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+		scroll->add(pinNameTitle);
+		outputTitle = new Fl_Box(FL_FRAME_BOX,
+								 pinNameTitle->x()+pinNameTitle->w(),
+								 column->y(),
+								 CHK_BOX_WIDTH,
+								 ITEM_HEIGHT,
+								 "O");
+		outputTitle->align(FL_ALIGN_INSIDE);
+		scroll->add(outputTitle);
+		outputEnTitle = new Fl_Box(FL_FRAME_BOX,
+								   outputTitle->x()+outputTitle->w(),
+								   column->y(),
+								   CHK_BOX_WIDTH,
+								   ITEM_HEIGHT,
+								   "OE");
+		outputEnTitle->align(FL_ALIGN_INSIDE);
+		scroll->add(outputEnTitle);
+		inputTitle = new Fl_Box(FL_FRAME_BOX,
+								outputEnTitle->x()+outputEnTitle->w(),
+								column->y(),
+								CHK_BOX_WIDTH,
+								ITEM_HEIGHT,
+								"I");
 		inputTitle->align(FL_ALIGN_INSIDE);
 		scroll->add(inputTitle);
-		Fl_Box *toggleTitle  = new Fl_Box(FL_FRAME_BOX,
-										  inputTitle->x()+inputTitle->w(),
-										  column->y(),
-										  CHK_BOX_WIDTH,
-										  ITEM_HEIGHT,
-										  "T");
+		toggleTitle = new Fl_Box(FL_FRAME_BOX,
+								 inputTitle->x()+inputTitle->w(),
+								 column->y(),
+								 CHK_BOX_WIDTH,
+								 ITEM_HEIGHT,
+								 "T");
 		toggleTitle->align(FL_ALIGN_INSIDE);
 		scroll->add(toggleTitle);
-
-		//printf("Title create %p\n", m_systemData);
-		//printf("CPU nb pins %ld\n", cpu->getNbUsablePins());
-		for(size_t i=0; i<cpu->getNbUsablePins(); i++) {
+		for(; i<nb_usable_gpio; i++) {
 			const PinData *pin = cpu->getUsablePin(i);
 			Fl_Check_Button *outputChkBox = 0;
 			Fl_Check_Button *outputEnChkBox = 0;
@@ -151,7 +266,7 @@ CpuTab::CpuTab(MainWindow *p_win,
 			Fl_Check_Button *toggleChkBox = 0;
 
 			Fl_Box *pinNameLbl = new Fl_Box(pinNameTitle->x(),
-											pinNameTitle->y()+pinNameTitle->h()+(i*CHKBOX_MARGIN),
+											pinNameTitle->y()+pinNameTitle->h()+((i%nb_gpio_per_column)*CHKBOX_MARGIN),
 											PIN_NAME_WIDTH,
 											ITEM_HEIGHT);
 			pinNameLbl->copy_label(pin->getName().c_str());

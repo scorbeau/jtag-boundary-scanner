@@ -491,6 +491,7 @@ static void *refresh_thread_process(void * arg)
 	while(1) {
 		Sleep(1000);
 		printf("Refresh CPU pin\n");
+
 		if(ctrl)
 			ctrl->refreshCpuPin();
 	}
