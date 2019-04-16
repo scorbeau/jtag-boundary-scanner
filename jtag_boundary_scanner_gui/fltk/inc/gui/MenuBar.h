@@ -1,6 +1,6 @@
 /*
  * Jtag Boundary Scanner
- * Copyright (c) 2019 S. Corbeau
+ * Copyright (c) 2019 Viveris Technologies
  *
  * Compate WinAPI for Linux is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -20,7 +20,7 @@
 /**
 * @file   MenuBar.h
 * @brief  Declare MenuBar of main windows.
-* @author Sébastien CORBEAU <seb.corbeau@gmail.com>
+* @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
 #ifndef GUI_MENUBAR_H_
 #define GUI_MENUBAR_H_

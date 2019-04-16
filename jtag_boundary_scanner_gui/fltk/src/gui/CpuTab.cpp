@@ -1,6 +1,6 @@
 /*
  * Jtag Boundary Scanner
- * Copyright (c) 2019 S. Corbeau
+ * Copyright (c) 2019 Viveris Technologies
  *
  * Compate WinAPI for Linux is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -20,7 +20,7 @@
 /**
 * @file   CpuTab.cpp
 * @brief  Implement TODO.
-* @author Sébastien CORBEAU <seb.corbeau@gmail.com>
+* @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
 //TODO: Delete if not use
 #include <stdio.h>
@@ -66,8 +66,6 @@ CpuTab::CpuTab(MainWindow *p_win,
 	Fl_Box *outputEnTitle = 0;
 	Fl_Box *inputTitle = 0;
 	Fl_Box *toggleTitle = 0;
-
-	//int height = 0;
 
 	m_cpuIndex = p_cpuIndex;
 	m_systemData =	p_win->getModel();

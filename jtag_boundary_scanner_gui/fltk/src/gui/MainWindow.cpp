@@ -20,7 +20,7 @@
 /**
 * @file   MainWindows.cpp
 * @brief  Implement MainWindows class (application windows.
-* @author Sébastien CORBEAU <seb.corbeau@gmail.com>
+* @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,6 +29,8 @@
 
 #include <gui/MainWindow.h>
 #include <gui/CpuTab.h>
+#include "gui/ProbeTab.h"
+#include "gui/AboutWindow.h"
 
 #include "controller/SystemController.h"
 
@@ -107,8 +109,10 @@ int MainWindow::getMenuBarEnd(void)
 
 void MainWindow::callBack(Fl_Widget *w)
 {
+#if 0
 	printf("%s : entry\n", __PRETTY_FUNCTION__);
 	m_controller->startJtagRefreshThread();
+#endif
 #if 0
 	m_tabs->addTabs(new CpuTab(this,
 								m_tabs->x()+TabsMenu::TABS_MENU_BOARDER,
@@ -121,8 +125,10 @@ void MainWindow::callBack(Fl_Widget *w)
 
 void MainWindow::callBack2(Fl_Widget *w)
 {
+#if 0
 	printf("%s : entry\n", __PRETTY_FUNCTION__);
 	m_controller->stopJtagRefreshThread();
+#endif
 #if 0
 	m_tabs->deleteTabs("New");
 #endif
@@ -145,13 +151,22 @@ void MainWindow::loadBsdl(Fl_Widget *w)
 		break;
 	}
 }
-void MainWindow::connect(Fl_Widget *w)
+
+int MainWindow::connect(Fl_Widget *w)
 {
+	ProbeTab *probeTab = (ProbeTab *) w;
 	int err = 0;
 	const SystemData *data =  m_controller->getSystemData();
-	const ProbeData *probe = data->getProbe(0);
+	//TODO Get Probe index
+	printf("Probe index %d\r\n", probeTab->getProbeIndex());
+	const ProbeData *probe = data->getProbe(probeTab->getProbeIndex());
 	if(probe) {
 		err = m_controller->scanProcessor(probe->getIdentifier());
+		if(err)
+			fl_alert("Failed to scan JTAG chain\n");
+	} else {
+		fl_alert("Probe not found\n");
+		err = -1;
 	}
 	if(!err) {
 		for(size_t i=0; i<data->getNbCpu(); i++) {
@@ -162,21 +177,27 @@ void MainWindow::connect(Fl_Widget *w)
 
 			if(0 == cpu->getNbBsdlFiles()) {
 				printf("\t-No BSDL file found\n");
+				//TODO: Open BSDL manually and check id OK
+			} else if (1 == cpu->getNbBsdlFiles()) {
+				err = m_controller->loadCpuBsdl(i, 0);
+				if(err)
+					fl_alert("Failed to load %s for CPU %s\n",
+							cpu->getBsdlFile(0).c_str(),
+							cpu->getCpuName().c_str());
 			} else {
+				// TODO: Add windows to select good BSDL
 				printf("\t-BSDL file(s):\n");
-			}
-
-			for(size_t j=0; j<cpu->getNbBsdlFiles(); j++) {
-				printf("\t\t-%s\n",
-					   cpu->getBsdlFile(j).c_str());
+				for(size_t j=0; j<cpu->getNbBsdlFiles(); j++) {
+					printf("\t\t-%s\n", cpu->getBsdlFile(j).c_str());
+				}
 			}
 		}
+#if 0
 		if(data->getNbCpu() > 0) {
 			printf("Add CPU[0] pins\n");
 			err = m_controller->loadCpuBsdl(0, 0);
 		}
-	} else {
-		printf("Failed to scan JTAG chain\n");
+#endif
 	}
 
 	if(!err)
@@ -190,6 +211,42 @@ void MainWindow::connect(Fl_Widget *w)
 								   m_tabs->h()-(TabsMenu::TABS_MENU_HEIGHT*2)));
 		m_controller->startJtagRefreshThread();
 	}
+
+	return err;
+}
+
+void MainWindow::disconnect(Fl_Widget *w)
+{
+	if(m_controller->isJtagRefreshThreadStart())
+	{
+		m_controller->stopJtagRefreshThread();
+	}
+	m_tabs->cleanCpuTabs();
+
+}
+
+void MainWindow::about(Fl_Widget *w)
+{
+	std::string name = std::string("About ") +std::string(this->label());
+	AboutWindow * aboutWindow = new AboutWindow(name.c_str());
+
+	printf("%s entry\n", __PRETTY_FUNCTION__);
+
+	deactivate();
+	m_menu->deactivate();
+
+	while(aboutWindow->shown()) Fl::wait();
+
+	m_menu->activate();
+	activate();
+
+	delete aboutWindow;
+#if 0
+
+	if(!m_aboutWindow)
+		printf("Error\n");
+	m_aboutWindow->show();
+#endif
 }
 
 const SystemData* MainWindow::getModel(void)

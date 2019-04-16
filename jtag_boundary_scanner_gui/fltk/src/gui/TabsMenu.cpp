@@ -1,6 +1,6 @@
 /*
  * Jtag Boundary Scanner
- * Copyright (c) 2019 S. Corbeau
+ * Copyright (c) 2019 Viveris Technologies
  *
  * Compate WinAPI for Linux is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -20,7 +20,7 @@
 /**
 * @file   Tabs.c
 * @brief  Implement tabs index.
-* @author Sébastien CORBEAU <seb.corbeau@gmail.com>
+* @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_Button.H>
@@ -28,12 +28,22 @@
 
 #include <gui/TabsMenu.h>
 #include <gui/TestTab.h>
+#include "gui/ProbeTab.h"
+#include <gui/MainWindow.h>
 
 TabsMenu::TabsMenu(int p_x, int p_y, int p_w, int p_h) :
 		Fl_Tabs(p_x, p_y, p_w, p_h)
 {
+	MainWindow *p = (MainWindow *)parent();
 	selection_color(FL_BACKGROUND_COLOR);
-
+	ProbeTab *probeTabs = new ProbeTab(p,
+									   p_x+TABS_MENU_BOARDER,
+									   p_y+TABS_MENU_HEIGHT,
+									   p_w-(TABS_MENU_BOARDER*2),
+									   p_h-(TABS_MENU_HEIGHT*2),
+									   "Probes");
+	probeTabs->end();
+#if 0
 	TestTab *test = new TestTab(p_x+TABS_MENU_BOARDER,
 								p_y+TABS_MENU_HEIGHT,
 								p_w-(TABS_MENU_BOARDER*2),
@@ -47,6 +57,7 @@ TabsMenu::TabsMenu(int p_x, int p_y, int p_w, int p_h) :
 	new Fl_Button(60, 150,200,25,"But 3 Tab B");
 	s2->end();
 	g2->end();
+#endif
 
 	resize(p_x, p_y, p_w, p_h);
 }
@@ -55,8 +66,6 @@ TabsMenu::~TabsMenu()
 {
 
 }
-
-#include <gui/MainWindow.h>
 
 // Keep tab size constant
 void TabsMenu::resize(int p_x, int p_y, int p_w, int p_h) {
@@ -95,8 +104,8 @@ void TabsMenu::deleteTabs(const char* label)
 
 	int i;
 	//printf("%s delete tabs label %s\n", __PRETTY_FUNCTION__, label);
-	i = 0;
-	while(i < children()) {
+
+	for(i=0; i < children(); i++) {
 		Fl_Widget *c = child(i);
 		if(!strcmp(c->label(), label)) {
 			//printf("%s Found\n", label);
@@ -104,8 +113,22 @@ void TabsMenu::deleteTabs(const char* label)
 			c->redraw();
 			remove(c);
 			delete c;
-		} else {
-			i++;
+		}
+	}
+	redraw();
+	parent()->redraw();
+}
+
+void TabsMenu::cleanCpuTabs(void)
+{
+	int i;
+	for(i=0; i<children(); i++) {
+		TabsModel *tab = (TabsModel *)child(i);
+		if(tab->isCpuTab()) {
+			tab->hide();
+			tab->redraw();
+			remove(tab);
+			delete tab;
 		}
 	}
 	redraw();

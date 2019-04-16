@@ -18,34 +18,21 @@
  */
 
 /**
-* @file   VirtualTabs.h
-* @brief  Declare TODO.
+* @file   AboutWindow.h
+* @brief  Declare class to manage About window.
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
-#ifndef GUI_TABSMODEL_H_
-#define GUI_TABSMODEL_H_
+#ifndef GUI_ABOUTWINDOW_H_
+#define GUI_ABOUTWINDOW_H_
 
-#include <FL/Fl_Group.H>
-#include <FL/Fl_Scroll.H>
+#include <FL/Fl.H>
+#include <FL/Fl_Window.H>
 
-class TabsModel : public Fl_Group {
+class AboutWindow : public Fl_Window
+{
 public:
-	TabsModel(int p_x,
-			  int p_y,
-			  int p_w,
-			  int p_h,
-			  const char* p_label=0,
-			  bool p_isCpuTab = false);
-	~TabsModel();
-	bool isCpuTab();
-
-	virtual void refresh(void) = 0;
-
-	static const int SCROLL_BORDER = 10;
-private:
-	bool m_isCpu;
+	AboutWindow(const char *p_applName);
+	~AboutWindow();
 };
 
-
-
-#endif /* GUI_TABSMODEL_H_ */
+#endif /* GUI_ABOUTWINDOW_H_ */

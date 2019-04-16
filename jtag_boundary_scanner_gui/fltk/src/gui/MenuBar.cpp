@@ -1,6 +1,6 @@
 /*
  * Jtag Boundary Scanner
- * Copyright (c) 2019 S. Corbeau
+ * Copyright (c) 2019 Viveris Technologies
  *
  * Compate WinAPI for Linux is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -20,7 +20,7 @@
 /**
 * @file   MainBar.cpp
 * @brief  Implement MenuBar of main windows.
-* @author Sébastien CORBEAU <seb.corbeau@gmail.com>
+* @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
 #include <stdlib.h>
 #include <stdio.h>
@@ -65,9 +65,9 @@ static void MenuExitCallback(Fl_Widget *w, void * ptr)
 
 static void MenuAboutCallback(Fl_Widget *w, void * ptr)
 {
-	const Fl_Menu_Item *item = ((Fl_Menu_Bar*)w)->mvalue();
-
-	if ( strcmp(item->label(), "&About") == 0 ) { printf("About\n"); }
+	Fl_Widget *p = w->parent();
+	while (p->parent()) p = p->parent();
+	((MainWindow*)p)->about(w);
 }
 
 static void MenuOpenBsdlCallback(Fl_Widget *w, void * ptr)

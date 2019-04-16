@@ -2,12 +2,12 @@
  * Jtag Boundary Scanner
  * Copyright (c) 2019 Viveris Technologies
  *
- * Compate WinAPI for Linux is free software; you can redistribute it and/or
+ * JTAG Boundary Scanner is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 3.0 of the License, or (at your option) any later version.
  *
- * Compate WinAPI for Linux is distributed in the hope that it will be useful,
+ * JTAG Boundary Scanner is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 3 for more details.
@@ -18,34 +18,38 @@
  */
 
 /**
-* @file   VirtualTabs.h
-* @brief  Declare TODO.
+* @file   ProbeTab.h
+* @brief  Declare Probe Tab GUI class.
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
-#ifndef GUI_TABSMODEL_H_
-#define GUI_TABSMODEL_H_
+#ifndef GUI_PROBETAB_H_
+#define GUI_PROBETAB_H_
 
-#include <FL/Fl_Group.H>
-#include <FL/Fl_Scroll.H>
+#include <FL/Fl.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Choice.H>
 
-class TabsModel : public Fl_Group {
+#include "gui/TabsModel.h"
+#include "gui/MainWindow.h"
+
+#include "model/SystemData.h"
+
+class ProbeTab : public TabsModel
+{
 public:
-	TabsModel(int p_x,
-			  int p_y,
-			  int p_w,
-			  int p_h,
-			  const char* p_label=0,
-			  bool p_isCpuTab = false);
-	~TabsModel();
-	bool isCpuTab();
-
-	virtual void refresh(void) = 0;
-
-	static const int SCROLL_BORDER = 10;
+	ProbeTab(MainWindow *p_win,
+			 int p_x,
+			 int p_y,
+			 int p_w,
+			 int p_h,
+			 const char *p_label = 0);
+	~ProbeTab();
+	void refresh(void);
+	int getProbeIndex(void);
 private:
-	bool m_isCpu;
+	const SystemData *m_systemData;
+	Fl_Button *m_connectBtn;
+	Fl_Choice *m_probeChoice;
 };
 
-
-
-#endif /* GUI_TABSMODEL_H_ */
+#endif /* GUI_PROBETAB_H_ */

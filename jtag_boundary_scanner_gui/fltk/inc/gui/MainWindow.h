@@ -1,6 +1,6 @@
 /*
  * Jtag Boundary Scanner
- * Copyright (c) 2019 S. Corbeau
+ * Copyright (c) 2019 Viveris Technologies
  *
  * Compate WinAPI for Linux is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -20,7 +20,7 @@
 /**
 * @file   MainWindows.h
 * @brief  Declare MainWindows class (application windows).
-* @author Sébastien CORBEAU <seb.corbeau@gmail.com>
+* @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
 #ifndef GUI_MAINWINDOW_H_
 #define GUI_MAINWINDOW_H_
@@ -50,7 +50,9 @@ public:
 	void callBack(Fl_Widget *w);
 	void callBack2(Fl_Widget *w);
 	void loadBsdl(Fl_Widget *w);
-	void connect(Fl_Widget *w);
+	int connect(Fl_Widget *w);
+	void disconnect(Fl_Widget *w);
+	void about(Fl_Widget *w);
 
 	void refresh(void);
 
@@ -65,6 +67,8 @@ private:
 	Fl_Native_File_Chooser *m_fileChooser;
 
 	SystemController *m_controller;
+
+	//AboutWindow* m_aboutWindow;
 };
 
 #endif /* GUI_MAINWINDOW_H_ */

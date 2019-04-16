@@ -392,6 +392,16 @@ void SystemController::stopJtagRefreshThread(void)
 	pthread_mutex_unlock(&m_threadMutex);
 }
 
+bool SystemController::isJtagRefreshThreadStart(void)
+{
+	bool ret = false;
+	pthread_mutex_lock(&m_threadMutex);
+	ret = m_threadRunning;
+	pthread_mutex_unlock(&m_threadMutex);
+
+	return ret;
+}
+
 int SystemController::runApplication(void)
 {
 	//TODO: Run IHM

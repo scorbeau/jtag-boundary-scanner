@@ -50,6 +50,7 @@ public:
 
 	void startJtagRefreshThread(void);
 	void stopJtagRefreshThread(void);
+	bool isJtagRefreshThreadStart(void);
 
 	void refreshCpuPin(void);
 
