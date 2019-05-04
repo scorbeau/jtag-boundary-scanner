@@ -2,12 +2,12 @@
  * Jtag Boundary Scanner
  * Copyright (c) 2019 Viveris Technologies
  *
- * Compate WinAPI for Linux is free software; you can redistribute it and/or
+ * JTAG Boundary Scanner is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 3.0 of the License, or (at your option) any later version.
  *
- * Compate WinAPI for Linux is distributed in the hope that it will be useful,
+ * JTAG Boundary Scanner is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 3 for more details.
@@ -18,34 +18,21 @@
  */
 
 /**
-* @file   TabsModel.h
-* @brief  Declare virtual pure class for each panel application.
+* @file   configuration.h
+* @brief  Declare configuration value.
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
-#ifndef GUI_TABSMODEL_H_
-#define GUI_TABSMODEL_H_
+#ifndef CONFIGURATION_H_
+#define CONFIGURATION_H_
 
-#include <FL/Fl_Group.H>
-#include <FL/Fl_Scroll.H>
+#include "jtag_core.h"
 
-class TabsModel : public Fl_Group {
-public:
-	TabsModel(int p_x,
-			  int p_y,
-			  int p_w,
-			  int p_h,
-			  const char* p_label=0,
-			  bool p_isCpuTab = false);
-	~TabsModel();
-	bool isCpuTab();
+#define NO_REFRESH_VAL		0
+#define REFRESH_20MS_VAL	20
+#define REFRESH_200MS_VAL	200
+#define REFRESH_1S_VAL		1000
 
-	virtual void refresh(void) = 0;
+#define DEFAULT_REFRESH_VAL	NO_REFRESH_VAL
+#define DEFAULT_SCAN_MODE	JTAG_CORE_SAMPLE_SCANMODE
 
-	static const int SCROLL_BORDER = 10;
-private:
-	bool m_isCpu;
-};
-
-
-
-#endif /* GUI_TABSMODEL_H_ */
+#endif /* CONFIGURATION_H_ */

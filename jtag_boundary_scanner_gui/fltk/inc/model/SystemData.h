@@ -73,9 +73,18 @@ public:
 						  bool p_state);
 
 	void addCpuBsdlFile(size_t p_index, std::string p_path);
+
+	int getRefreshTime(void);
+	void setRefreshTime(int p_refreshTime);
+
+	int getScanMode(void);
+	void setScanMode(int p_scanMode);
 private:
 	std::vector<ProbeData*> m_probe;
 	std::vector<CpuData*>   m_cpu;
+
+	int m_refreshTime;
+	int m_scanMode;
 };
 
 #endif /*  MODEL_SYSTEM_DATA_H__ */

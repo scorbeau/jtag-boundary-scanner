@@ -18,40 +18,45 @@
  */
 
 /**
-* @file   ProbeTab.h
-* @brief  Declare Probe Tab GUI class.
+* @file   BoundaryFileWindow.h
+* @brief  Declare Boundary file selector window.
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
-#ifndef GUI_PROBETAB_H_
-#define GUI_PROBETAB_H_
+#ifndef GUI_BOUNDARYFILEWINDOW_H_
+#define GUI_BOUNDARYFILEWINDOW_H_
+
+#include <string>
 
 #include <FL/Fl.H>
-#include <FL/Fl_Button.H>
+#include <FL/Fl_Window.H>
 #include <FL/Fl_Choice.H>
+#include <FL/Fl_Input.H>
 
-#include "gui/TabsModel.h"
-#include "gui/MainWindow.h"
+#include "model/CpuData.h"
 
-#include "model/SystemData.h"
-
-class ProbeTab : public TabsModel
+class BoundaryFileWindow : public Fl_Window
 {
 public:
-	ProbeTab(MainWindow *p_win,
-			 int p_x,
-			 int p_y,
-			 int p_w,
-			 int p_h,
-			 const char *p_label = 0);
-	~ProbeTab();
-	void refresh(void);
-	int getProbeIndex(void);
+	BoundaryFileWindow(const char *p_applName, const CpuData* p_cpu);
+	~BoundaryFileWindow();
+
+	void setCancelRequest(bool cancel = true);
+	bool isCancelRequest(void);
+
+	void selectInstallBsdlChoice(bool selectInstallBsdl = true);
+
+	void setSelectedBsdlPath(const char* path);
+
+	bool isInstalledBsdl(void);
+	int getInstalledBsdlIndex(void);
+
+	std::string getBsdlPath(void);
 private:
-	const SystemData *m_systemData;
-	Fl_Button *m_connectBtn;
-	Fl_Choice *m_probeChoice;
-	Fl_Group  *m_refreshGroup;
-	Fl_Group  *m_modeGroup;
+	bool m_cancelRequest;
+
+	Fl_Choice *m_bsdlChoice;
+	Fl_Input  *m_bsdlInput;
+	Fl_Button *m_selectFileBtn;
 };
 
-#endif /* GUI_PROBETAB_H_ */
+#endif /* GUI_BOUNDARYFILEWINDOW_H_ */

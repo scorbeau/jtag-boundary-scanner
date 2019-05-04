@@ -23,9 +23,12 @@
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
 #include "model/SystemData.h"
+#include "configuration.h"
 
 SystemData::SystemData()
 {
+	m_refreshTime = DEFAULT_REFRESH_VAL;
+	m_scanMode = DEFAULT_SCAN_MODE;
 }
 
 SystemData::~SystemData()
@@ -138,4 +141,28 @@ void SystemData::updateInputState(size_t p_cpuIndex,
 {
 	if(p_cpuIndex < m_cpu.size())
 		m_cpu[p_cpuIndex]->updateInputState(p_gpioIndex, p_state);
+}
+
+int SystemData::getRefreshTime(void)
+{
+	//TODO: Update multithreading
+	return m_refreshTime;
+}
+
+void SystemData::setRefreshTime(int p_refreshTime)
+{
+	//TODO: Update multithreading + check value
+	m_refreshTime = p_refreshTime;
+}
+
+int SystemData::getScanMode(void)
+{
+	//TODO: Update multithreading
+	return m_scanMode;
+}
+
+void SystemData::setScanMode(int p_scanMode)
+{
+	//TODO: Update multithreading + value
+	m_scanMode = p_scanMode;
 }

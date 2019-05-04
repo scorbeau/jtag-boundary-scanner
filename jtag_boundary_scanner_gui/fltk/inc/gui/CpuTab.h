@@ -45,6 +45,12 @@ public:
 	void refresh(void);
 	int getCpuIndex(void);
 	const CpuPinCheckBox* getPinCheckBoxes(size_t p_index) const;
+
+	void setInputPin(size_t p_index, int state);
+	void setOutputPin(size_t p_index, int state);
+	void setOutputEnablePin(size_t p_index, int state);
+
+	void toggleOutputPin(size_t p_index);
 private:
 	const SystemData *m_systemData;
 	std::vector<CpuPinCheckBox*> m_cpuPinCheckBoxes;

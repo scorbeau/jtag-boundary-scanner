@@ -22,14 +22,20 @@
 * @brief  Implement class to manage About window.
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
+#include <string>
+
 #include <FL/Fl_Button.H>
 #include <FL/Fl_BMP_Image.H>
 #include <FL/Fl_Box.H>
 
-#include "gui/AboutWindow.h"
+#include <jtag_core.h>
+#include <winapi_compat.h>
 
-static const int ABOUT_WINDOWS_WIDTH = 550;
-static const int ABOUT_WINDOWS_HEIGHT = 250;
+#include "gui/AboutWindow.h"
+#include "version.h"
+
+static const int ABOUT_WINDOW_WIDTH = 550;
+static const int ABOUT_WINDOW_HEIGHT = 160;
 static const int BORDER = 10;
 static const int OK_BUTTON_WIDTH = 90;
 static const int OK_BUTTON_HEIGHT = 20;
@@ -42,8 +48,9 @@ static void callbackOkButton(Fl_Widget *w, void *param)
 }
 
 AboutWindow::AboutWindow(const char *p_applName) :
-		Fl_Window(ABOUT_WINDOWS_WIDTH, ABOUT_WINDOWS_HEIGHT, p_applName)
+		Fl_Window(ABOUT_WINDOW_WIDTH, ABOUT_WINDOW_HEIGHT, p_applName)
 {
+	std::string aboutString;
 	Fl_BMP_Image *vtImg = new Fl_BMP_Image("viveris.bmp");
 	Fl_Box *boxImg = new Fl_Box(BORDER, BORDER, vtImg->w(), vtImg->h());
 	boxImg->image(vtImg);
@@ -51,8 +58,17 @@ AboutWindow::AboutWindow(const char *p_applName) :
 	Fl_Box *aboutTxt = new Fl_Box(boxImg->x()+boxImg->w()+BORDER,
 								  BORDER,
 								  w()-(boxImg->x()+boxImg->w()+2*BORDER),
-								  boxImg->h(),
-								  "JTAG Boundary Scanner Version 3.0.0\nCopyright (C) Viveris Technologies 2008-2019\nhttps://www.viveris.fr/\nhttps://github.com/viveris/jtag-boundary-scanner\n");
+								  h()-(OK_BUTTON_HEIGHT + 3*BORDER));
+	aboutString = "JTAG Boundary Scanner Version : ";
+	aboutString += JTAG_BOUNDARY_SCANNER_APPL_VERSION;
+	aboutString += "\nLib JTAG Core Version : ";
+	aboutString += LIB_JTAG_CORE_VERSION;
+	aboutString += "\nLib WinAPI Compat Version : ";
+	aboutString += LIB_WINAPI_COMPAT_VERSION;
+	aboutString += "\nCopyright (C) Viveris Technologies 2008-2019\n";
+	aboutString += "https://www.viveris.fr/\n";
+	aboutString += "https://github.com/viveris/jtag-boundary-scanner\n";
+	aboutTxt->copy_label(aboutString.c_str());
 
 	Fl_Button *btnOk = new Fl_Button(w()-BORDER-OK_BUTTON_WIDTH,
 									 aboutTxt->y() + aboutTxt->h() + BORDER,
@@ -60,7 +76,7 @@ AboutWindow::AboutWindow(const char *p_applName) :
 									 OK_BUTTON_HEIGHT,
 									 "OK");
 	btnOk->callback(callbackOkButton);
-	size(w(), btnOk->y()+btnOk->h()+BORDER);
+
 	end();
 	show();
 }

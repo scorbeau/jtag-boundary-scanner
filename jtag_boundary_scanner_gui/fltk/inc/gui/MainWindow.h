@@ -61,10 +61,11 @@ public:
 	const SystemData* getModel(void);
 	CpuTab* getCurrentCpuTab(void);
 
+	void updateRefreshTime(int p_refreshTime);
+	void updateScanMode(int p_scanMode);
 private:
 	MenuBar *m_menu;
 	TabsMenu *m_tabs;
-	Fl_Native_File_Chooser *m_fileChooser;
 
 	SystemController *m_controller;
 

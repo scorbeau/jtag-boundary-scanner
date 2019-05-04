@@ -90,7 +90,7 @@ int SystemController::refreshProbeList(void)
 			err = jtagcore_get_probe_name(m_jtagCore,
 						      PROBE_ID(i, j),
 						      buffer);
-#if 1
+#if 0
 			printf("Drv[%d]/Probe[%d] : Name=%s err=%d\n",
 				i,
 				j,
@@ -235,10 +235,30 @@ int SystemController::loadCpuBsdl(size_t p_cpuIndex, size_t p_bsdlIndex)
 	if(!cpu)
 		return -1;
 
-	if(p_bsdlIndex >= cpu->getNbBsdlFiles())
+	if(p_bsdlIndex > cpu->getNbBsdlFiles())
 		return -1;
 
 	return loadBsdlFile(p_cpuIndex, p_bsdlIndex);
+}
+
+int SystemController::loadManuallyCpuBsdl(size_t p_cpuIndex,
+		std::string p_bsdlPath)
+{
+	const CpuData* cpu = m_systemData->getCpu(p_cpuIndex);
+
+	if(!cpu)
+		return -1;
+
+	// Add new BSDL
+	m_systemData->addCpuBsdlFile(p_cpuIndex, p_bsdlPath);
+
+	// Load last add BSDL file
+	return loadBsdlFile(p_cpuIndex, cpu->getNbBsdlFiles()-1);
+}
+
+unsigned long SystemController::getCpuIdFromBsdl(std::string p_bsdlPath)
+{
+	return jtagcore_get_bsdl_id(m_jtagCore, p_bsdlPath.c_str());
 }
 
 CpuData* SystemController::createCpuFromBsdl(std::string p_bsdlPath)
@@ -366,6 +386,12 @@ void SystemController::startJtagRefreshThread(void)
 		return;
 	}
 
+	// TODO Make configurable SCANMODE
+	for(size_t i=0; i<m_systemData->getNbCpu(); i++) {
+		//jtagcore_set_scan_mode(m_jtagCore, i, JTAG_CORE_SAMPLE_SCANMODE);
+		jtagcore_set_scan_mode(m_jtagCore, i, JTAG_CORE_EXTEST_SCANMODE);
+	}
+
 	pthread_attr_init (&thread_attr);
 	pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
 	pthread_create(&m_thread, &thread_attr, refresh_thread_process, this);
@@ -427,65 +453,110 @@ void SystemController::refreshCpuPin(void)
 	if(!cpu)
 		return;
 
-	/* Update output state on JTAG chain */
+	Fl::lock();
 	for(size_t i=0; i<cpu->getNbUsablePins(); i++)
 	{
 		const PinData *pin = cpu->getUsablePin(i);
 		const CpuPinCheckBox* pinCheckBox = tab->getPinCheckBoxes(i);
+
 		if(!pin || !pinCheckBox)
 			continue;
 
 		if(pin->isOutput()) {
 			if(pinCheckBox->getToggleState()) {
-				m_systemData->setOutputState(cpuIndex,
-											 pin->getPinJtagChainIndex(),
-											 !pin->getOutputState());
+				tab->toggleOutputPin(i);
+			}
+
+			state = jtagcore_get_pin_state(m_jtagCore,
+										   cpuIndex,
+										   pin->getPinJtagChainIndex(),
+										   JTAG_CORE_OUTPUT);
+			if((state >= 0) && (state != pinCheckBox->getOutputState())) {
 				jtagcore_set_pin_state(m_jtagCore,
 									   cpuIndex,
 									   pin->getPinJtagChainIndex(),
 									   JTAG_CORE_OUTPUT,
-									   pin->getOutputState());
-			} else if(pin->getOutputState() != pinCheckBox->getOutputState()) {
-				printf("%s change state required by user\n", pin->getName().c_str());
-				m_systemData->setOutputState(cpuIndex,
-											 pin->getPinJtagChainIndex(),
-											 pinCheckBox->getOutputState());
+									   pinCheckBox->getOutputState());
+			}
+		}
+		if(pin->isTristate())
+		{
+			state = jtagcore_get_pin_state(m_jtagCore,
+										   cpuIndex,
+										   pin->getPinJtagChainIndex(),
+										   JTAG_CORE_OE);
+			if((state >= 0) && (state != pinCheckBox->getOutputEnableState())) {
 				jtagcore_set_pin_state(m_jtagCore,
 									   cpuIndex,
 									   pin->getPinJtagChainIndex(),
-									   JTAG_CORE_OUTPUT,
-									   pin->getOutputState());
+									   JTAG_CORE_OE,
+									   pinCheckBox->getOutputEnableState());
 			}
 		}
 	}
 
 	state = jtagcore_push_and_pop_chain(m_jtagCore, JTAG_CORE_WRITE_READ);
-	if(state != JTAG_CORE_NO_ERROR)
-		return;
 
-	for(size_t i=0; i<cpu->getNbUsablePins(); i++)
-	{
-		const PinData *pin = cpu->getUsablePin(i);
-		if(!pin)
-			continue;
-		if(pin->isInput()) {
-			state = jtagcore_get_pin_state(m_jtagCore,
-										   cpuIndex,
-										   pin->getPinJtagChainIndex(),
-										   JTAG_CORE_INPUT);
-			if(state == 0) {
-				m_systemData->updateInputState(cpuIndex,
+	if(state == JTAG_CORE_NO_ERROR) {
+		for(size_t i=0; i<cpu->getNbUsablePins(); i++)
+		{
+			const PinData *pin = cpu->getUsablePin(i);
+			const CpuPinCheckBox* pinCheckBox = tab->getPinCheckBoxes(i);
+			if(!pin || !pinCheckBox)
+				continue;
+
+			if(pin->isInput()) {
+				state = jtagcore_get_pin_state(m_jtagCore,
+											   cpuIndex,
 											   pin->getPinJtagChainIndex(),
-											   false);
-			} else if(state>0) {
-				m_systemData->updateInputState(cpuIndex,
+											   JTAG_CORE_INPUT);
+				tab->setInputPin(i, state);
+			}
+
+			if(pin->isTristate()) {
+				state = jtagcore_get_pin_state(m_jtagCore,
+											   cpuIndex,
 											   pin->getPinJtagChainIndex(),
-											   true);
+											   JTAG_CORE_INPUT);
+				if (state >= 0)
+				{
+					tab->setInputPin(i, state);
+				}
+
+				state = jtagcore_get_pin_state(m_jtagCore,
+											   cpuIndex,
+											   pin->getPinJtagChainIndex(),
+											   JTAG_CORE_OUTPUT);
+				if (state >= 0)
+				{
+					tab->setOutputPin(i, state);
+				}
+
+				state = jtagcore_get_pin_state(m_jtagCore,
+											   cpuIndex,
+											   pin->getPinJtagChainIndex(),
+											   JTAG_CORE_OE);
+				if (state >= 0)
+				{
+					tab->setOutputEnablePin(i, state);
+				}
 			}
 		}
+	} else {
+		// TODO add alert?
 	}
+	Fl::unlock();
+	Fl::awake();
+}
 
-	m_application->refresh();
+void SystemController::updateRefreshTime(int p_refreshTime)
+{
+	m_systemData->setRefreshTime(p_refreshTime);
+}
+
+void SystemController::updateScanMode(int p_scanMode)
+{
+	m_systemData->setScanMode(p_scanMode);
 }
 
 static void *refresh_thread_process(void * arg)
@@ -499,8 +570,8 @@ static void *refresh_thread_process(void * arg)
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 	while(1) {
-		Sleep(1000);
-		printf("Refresh CPU pin\n");
+		Sleep(1);
+		//printf("Refresh CPU pin\n");
 
 		if(ctrl)
 			ctrl->refreshCpuPin();

@@ -58,30 +58,45 @@ int CpuPinCheckBox::getToggleState(void) const
 
 void CpuPinCheckBox::setOutputState(int p_state)
 {
-	if(m_output) {
+	if(m_output && ((char)p_state != m_output->value())) {
 		if(p_state)
 			m_output->set();
 		else
 			m_output->clear();
+		m_output->redraw();
 	}
 }
 
 void CpuPinCheckBox::setOutputEnableState(int p_state)
 {
-	if(m_outputEnable) {
+	if(m_outputEnable && ((char)p_state != m_outputEnable->value())) {
 		if(p_state)
 			m_outputEnable->set();
 		else
 			m_outputEnable->clear();
+		m_outputEnable->redraw();
 	}
 }
 
 void CpuPinCheckBox::setInputState(int p_state)
 {
-	if(m_input) {
+	if(m_input && ((char)p_state != m_input->value())) {
 		if(p_state)
 			m_input->set();
 		else
 			m_input->clear();
+		m_input->redraw();
+	}
+}
+
+void CpuPinCheckBox::toggleOutputState(void)
+{
+	if(m_output)
+	{
+		if(m_output->value())
+			m_output->clear();
+		else
+			m_output->set();
+		m_output->redraw();
 	}
 }

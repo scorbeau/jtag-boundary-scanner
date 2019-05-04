@@ -2,12 +2,12 @@
  * Jtag Boundary Scanner
  * Copyright (c) 2019 Viveris Technologies
  *
- * Compate WinAPI for Linux is free software; you can redistribute it and/or
+ * JTAG Boundary Scanner is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 3.0 of the License, or (at your option) any later version.
  *
- * Compate WinAPI for Linux is distributed in the hope that it will be useful,
+ * JTAG Boundary Scanner is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 3 for more details.
@@ -18,34 +18,13 @@
  */
 
 /**
-* @file   TabsModel.h
-* @brief  Declare virtual pure class for each panel application.
+* @file   version.h
+* @brief  Declare Version .
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
-#ifndef GUI_TABSMODEL_H_
-#define GUI_TABSMODEL_H_
+#ifndef VERSION_H_
+#define VERSION_H_
 
-#include <FL/Fl_Group.H>
-#include <FL/Fl_Scroll.H>
+#define JTAG_BOUNDARY_SCANNER_APPL_VERSION	"3.0.0"
 
-class TabsModel : public Fl_Group {
-public:
-	TabsModel(int p_x,
-			  int p_y,
-			  int p_w,
-			  int p_h,
-			  const char* p_label=0,
-			  bool p_isCpuTab = false);
-	~TabsModel();
-	bool isCpuTab();
-
-	virtual void refresh(void) = 0;
-
-	static const int SCROLL_BORDER = 10;
-private:
-	bool m_isCpu;
-};
-
-
-
-#endif /* GUI_TABSMODEL_H_ */
+#endif /* VERSION_H_ */

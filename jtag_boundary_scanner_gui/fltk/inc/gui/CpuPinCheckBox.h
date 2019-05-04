@@ -43,6 +43,8 @@ public:
 	void setOutputState(int p_state);
 	void setOutputEnableState(int p_state);
 	void setInputState(int p_state);
+
+	void toggleOutputState(void);
 private:
 	Fl_Check_Button *m_output;
 	Fl_Check_Button *m_outputEnable;

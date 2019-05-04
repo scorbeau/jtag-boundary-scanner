@@ -31,6 +31,8 @@
 #include <gui/CpuTab.h>
 #include "gui/ProbeTab.h"
 #include "gui/AboutWindow.h"
+#include "gui/BoundaryFileWindow.h"
+#include "gui/BsdlFileChooser.h"
 
 #include "controller/SystemController.h"
 
@@ -41,14 +43,13 @@
 #warning "TODO: Managed icon on windows"
 #endif
 
-static const char* untitled_default(void);
-
 MainWindow::MainWindow(SystemController *p_controller, const char *p_applName,
 						int p_width, int p_height) :
 		Fl_Window(p_width, p_height, p_applName)
 {
 	int err;
 	Fl::scheme("gtk+");
+	Fl::lock();
 
 	m_controller = p_controller;
 	err = m_controller->initJtagCore();
@@ -83,17 +84,12 @@ MainWindow::MainWindow(SystemController *p_controller, const char *p_applName,
 #else
 #warning "TODO: Implement for windows"
 #endif
-	m_fileChooser = new Fl_Native_File_Chooser();
-	m_fileChooser->filter("BSD or BSDL files\t*.{bsdl,bsd}\n"
-						  "TXT files\t*.txt\n");
-	m_fileChooser->preset_file(untitled_default());
 }
 
 MainWindow::~MainWindow()
 {
 	//delete m_menu;
-	delete m_tabs;
-	delete m_fileChooser;
+	//delete m_tabs;
 }
 
 int MainWindow::run(void)
@@ -109,6 +105,28 @@ int MainWindow::getMenuBarEnd(void)
 
 void MainWindow::callBack(Fl_Widget *w)
 {
+	std::string title = std::string("Select bsdl file for ") + std::string("CPU");
+	CpuData *test = new CpuData(0x12345678, 0);
+	test->addBsdlFile("/home/scorbeau/toto.bsdl");
+	test->addBsdlFile("/home/scorbeau/toto2.bsdl");
+	test->addBsdlFile("/home/scorbeau/toto3.bsdl");
+	test->addBsdlFile("/home/scorbeau/toto4.bsdl");
+	BoundaryFileWindow *boundaryWindow = new BoundaryFileWindow(title.c_str(),
+			test);
+
+	deactivate();
+	m_menu->deactivate();
+
+	while(boundaryWindow->shown()) Fl::wait();
+
+	printf("Cancel state %d\n", boundaryWindow->isCancelRequest());
+	printf("Selected BSDL file : %s\n", boundaryWindow->getBsdlPath().c_str());
+
+	m_menu->activate();
+	activate();
+
+	delete boundaryWindow;
+
 #if 0
 	printf("%s : entry\n", __PRETTY_FUNCTION__);
 	m_controller->startJtagRefreshThread();
@@ -136,20 +154,11 @@ void MainWindow::callBack2(Fl_Widget *w)
 
 void MainWindow::loadBsdl(Fl_Widget *w)
 {
-	//CpuData *cpu = 0;
-	printf("%s : entry\n", __PRETTY_FUNCTION__);
-	m_fileChooser->title("Open");
-	m_fileChooser->type(Fl_Native_File_Chooser::BROWSE_FILE);		// only picks files that exist
-	switch ( m_fileChooser->show() ) {
-		case -1: break;	// Error
-		case  1: break;	// Cancel
-		default:		// Choice
-			m_fileChooser->preset_file(m_fileChooser->filename());
-			printf("%s\n", m_fileChooser->filename());
-			/* cpu = */ m_controller->createCpuFromBsdl(
-						std::string(m_fileChooser->filename()));
-		break;
-	}
+	BsdlFileChooser fileChooser;
+	std::string filename = fileChooser.getSelectBsdlFile();
+	printf("%s\n", filename.c_str());
+	if(filename != "")
+		m_controller->createCpuFromBsdl(filename);
 }
 
 int MainWindow::connect(Fl_Widget *w)
@@ -158,7 +167,7 @@ int MainWindow::connect(Fl_Widget *w)
 	int err = 0;
 	const SystemData *data =  m_controller->getSystemData();
 	//TODO Get Probe index
-	printf("Probe index %d\r\n", probeTab->getProbeIndex());
+	printf("Probe index %d\n", probeTab->getProbeIndex());
 	const ProbeData *probe = data->getProbe(probeTab->getProbeIndex());
 	if(probe) {
 		err = m_controller->scanProcessor(probe->getIdentifier());
@@ -169,46 +178,75 @@ int MainWindow::connect(Fl_Widget *w)
 		err = -1;
 	}
 	if(!err) {
-		for(size_t i=0; i<data->getNbCpu(); i++) {
+		for(size_t i=0; i<data->getNbCpu() && !err; i++) {
 			const CpuData *cpu = data->getCpu(i);
+			//size_t bsdlIndex = 0;
+			BoundaryFileWindow *bsdlFileWin = new BoundaryFileWindow(
+					"Select file for CPU :", cpu);
 			printf("CPU[%ld] :\n", i);
 			printf("\t-Id : 0x%08lX\n", cpu->getCpuId());
 			printf("\t-JTAG index : %d\n", cpu->getCpuJtagIndex());
 
-			if(0 == cpu->getNbBsdlFiles()) {
-				printf("\t-No BSDL file found\n");
-				//TODO: Open BSDL manually and check id OK
-			} else if (1 == cpu->getNbBsdlFiles()) {
-				err = m_controller->loadCpuBsdl(i, 0);
-				if(err)
-					fl_alert("Failed to load %s for CPU %s\n",
-							cpu->getBsdlFile(0).c_str(),
-							cpu->getCpuName().c_str());
+			deactivate();
+			m_menu->deactivate();
+
+			while(bsdlFileWin->shown())
+				Fl::wait();
+
+			activate();
+			m_menu->deactivate();
+
+			if(bsdlFileWin->isCancelRequest()) {
+				fl_alert("Cancel scanning\n");
+				err = -1;
 			} else {
-				// TODO: Add windows to select good BSDL
-				printf("\t-BSDL file(s):\n");
-				for(size_t j=0; j<cpu->getNbBsdlFiles(); j++) {
-					printf("\t\t-%s\n", cpu->getBsdlFile(j).c_str());
+				if(bsdlFileWin->isInstalledBsdl()) {
+					err = m_controller->loadCpuBsdl(i,
+							bsdlFileWin->getInstalledBsdlIndex());
+				} else {
+					bool cpuIdValid = true;
+					unsigned long bsdlId = m_controller->getCpuIdFromBsdl(bsdlFileWin->getBsdlPath());
+					if(bsdlId != cpu->getCpuId()) {
+						int ret = fl_choice("JTAG Id read 0x%08X. In file read 0x%08X\n"
+								  "Apply file BSDL anyway ?\n",
+								  "Yes",
+								  "No",
+								  0,
+								  (unsigned int) cpu->getCpuId(),
+								  (unsigned int)bsdlId);
+						switch (ret) {
+							case 0:
+								cpuIdValid = false;
+								break;
+							case 1:
+								cpuIdValid = true;
+								break;
+							default:
+								cpuIdValid = false;
+								break;
+						}
+					}
+
+					if(cpuIdValid) {
+						err = m_controller->loadManuallyCpuBsdl(i,
+								bsdlFileWin->getBsdlPath());
+					}
 				}
 			}
 		}
-#if 0
-		if(data->getNbCpu() > 0) {
-			printf("Add CPU[0] pins\n");
-			err = m_controller->loadCpuBsdl(0, 0);
-		}
-#endif
 	}
 
 	if(!err)
 	{
 		printf("Create new tab\n");
-		m_tabs->addTabs(new CpuTab(this,
-								   0,
-								   m_tabs->x()+TabsMenu::TABS_MENU_BOARDER,
-								   m_tabs->y()+TabsMenu::TABS_MENU_HEIGHT,
-								   m_tabs->w()-(TabsMenu::TABS_MENU_BOARDER*2),
-								   m_tabs->h()-(TabsMenu::TABS_MENU_HEIGHT*2)));
+		for(size_t i=0; i<data->getNbCpu(); i++) {
+			m_tabs->addTabs(new CpuTab(this,
+					i,
+					m_tabs->x()+TabsMenu::TABS_MENU_BOARDER,
+					m_tabs->y()+TabsMenu::TABS_MENU_HEIGHT,
+					m_tabs->w()-(TabsMenu::TABS_MENU_BOARDER*2),
+					m_tabs->h()-(TabsMenu::TABS_MENU_HEIGHT*2)));
+		}
 		m_controller->startJtagRefreshThread();
 	}
 
@@ -258,7 +296,7 @@ CpuTab* MainWindow::getCurrentCpuTab(void)
 {
 	TabsModel* tab = 0;
 
-	printf("%s : Entry point\n", __PRETTY_FUNCTION__);
+	//printf("%s : Entry point\n", __PRETTY_FUNCTION__);
 
 	if(!m_tabs)
 		return NULL;
@@ -280,12 +318,12 @@ void MainWindow::refresh(void)
 		tab->refresh();
 }
 
-static const char* untitled_default(void)
+void MainWindow::updateRefreshTime(int p_refreshTime)
 {
-	const char *home =
-			getenv("HOME") ? getenv("HOME") :			// Linux home
-			getenv("HOME_PATH") ? getenv("HOME_PATH") :	// Windows home
-			".";										// other  current path
-	return home;
+	m_controller->updateRefreshTime(p_refreshTime);
 }
 
+void MainWindow::updateScanMode(int p_scanMode)
+{
+	m_controller->updateScanMode(p_scanMode);
+}

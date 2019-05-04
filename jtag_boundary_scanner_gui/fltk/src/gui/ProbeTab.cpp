@@ -24,22 +24,38 @@
 */
 #include <FL/Fl.H>
 #include <FL/Fl_Scroll.H>
+#include <FL/Fl_Round_Button.H>
 
 #include "gui/ProbeTab.h"
+#include "configuration.h"
+#include "jtag_core.h"
 
 static const int ITEM_HEIGHT = 20;
-static const int PROBE_CHOICE_WIDTH = 200;
+static const int PROBE_CHOICE_WIDTH = 250;
 static const int REFRESH_PROBE_WIDTH = 90;
 static const int CONNECT_PROBE_WIDTH = 90;
-static const int BOX_MARGIN = 1;
+static const int BOARD_MARGIN = 1;
 static const int X_MARGIN = 15;
 static const int Y_MARGIN = 15;
+static const int LST_Y_MARGIN = 1;
+static const int LABEL_WIDTH = 75;
+static const int ROUND_BTN_WIDTH = 150;
 
 static const char *CONNECT_LABEL = "Connect";
 static const char *DISCONNECT_LABEL = "Disconnect";
 
-static void RefreshProbeCallback(Fl_Widget *w, void * ptr);
-static void ConnectProbeCallback(Fl_Widget *w, void * ptr);
+static const char *NO_REFRESH_LABEL = "No refresh";
+static const char *REFRESH_20MS_LABEL = "20 ms refresh";
+static const char *REFRESH_200MS_LABEL = "200 ms refresh";
+static const char *REFRESH_1S_LABEL = "1s refresh";
+
+static const char *SAMPLE_MODE_LABEL = "Sample mode";
+static const char *EXTTEST_MODE_LABEL = "EXT test mode";
+
+static void refreshProbeCallback(Fl_Widget *w, void * ptr);
+static void connectProbeCallback(Fl_Widget *w, void * ptr);
+static void updateRefreshTime(Fl_Widget *w, void * ptr);
+static void updateMode(Fl_Widget *w, void * ptr);
 
 ProbeTab::ProbeTab(MainWindow *p_win,
 				   int p_x,
@@ -56,11 +72,17 @@ ProbeTab::ProbeTab(MainWindow *p_win,
 									  p_h-(2*TabsModel::SCROLL_BORDER));
 	scroll->end();
 
-	m_probeChoice = new Fl_Choice(scroll->x()+BOX_MARGIN,
-									  scroll->y()+BOX_MARGIN,
-									  PROBE_CHOICE_WIDTH,
-									  ITEM_HEIGHT,
-									  "Probe : ");
+	Fl_Box *lbl = new Fl_Box(scroll->x()+BOARD_MARGIN,
+							scroll->y()+BOARD_MARGIN,
+							LABEL_WIDTH,
+							ITEM_HEIGHT,
+							"Probe(s) :");
+	lbl->align(FL_ALIGN_CLIP|FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+	scroll->add(lbl);
+	m_probeChoice = new Fl_Choice(lbl->x() + lbl->w() + Y_MARGIN,
+								  lbl->y(),
+								  PROBE_CHOICE_WIDTH,
+								  ITEM_HEIGHT);
 
 	for(size_t i=0; i<m_systemData->getNbProbe(); i++) {
 		m_probeChoice->add(m_systemData->getProbe(i)->getName().c_str());
@@ -70,12 +92,12 @@ ProbeTab::ProbeTab(MainWindow *p_win,
 
 	scroll->add(m_probeChoice);
 
-	Fl_Button *refreshBtn = new Fl_Button(scroll->x()+BOX_MARGIN,
+	Fl_Button *refreshBtn = new Fl_Button(scroll->x()+BOARD_MARGIN,
 				m_probeChoice->y()+m_probeChoice->h()+Y_MARGIN,
 				REFRESH_PROBE_WIDTH,
 				ITEM_HEIGHT,
 				"Refresh");
-	refreshBtn->callback(RefreshProbeCallback, NULL);
+	refreshBtn->callback(refreshProbeCallback, NULL);
 	scroll->add(refreshBtn);
 
 	m_connectBtn = new Fl_Button(
@@ -84,9 +106,97 @@ ProbeTab::ProbeTab(MainWindow *p_win,
 				CONNECT_PROBE_WIDTH,
 				ITEM_HEIGHT,
 				CONNECT_LABEL);
-	m_connectBtn->callback(ConnectProbeCallback, NULL);
+	m_connectBtn->callback(connectProbeCallback, NULL);
 	scroll->add(m_connectBtn);
 
+	m_refreshGroup = new Fl_Group(scroll->x()+BOARD_MARGIN,
+				refreshBtn->y()+ refreshBtn->h() + Y_MARGIN,
+				scroll->w()-(2 * BOARD_MARGIN),
+				5 * (ITEM_HEIGHT+LST_Y_MARGIN));
+	{
+		Fl_Box *lbl2 = new Fl_Box(m_refreshGroup->x(),
+								  m_refreshGroup->y(),
+								  m_refreshGroup->w(),
+								  ITEM_HEIGHT,
+								  "Refresh time(s) : ");
+		lbl2->align(FL_ALIGN_CLIP|FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+
+		Fl_Round_Button* o = new Fl_Round_Button(m_refreshGroup->x(),
+				lbl2->y() + lbl2->h() + LST_Y_MARGIN,
+				ROUND_BTN_WIDTH,
+				ITEM_HEIGHT,
+				NO_REFRESH_LABEL);
+		o->type(102);
+		o->down_box(FL_ROUND_DOWN_BOX);
+		o->callback((Fl_Callback*) updateRefreshTime);
+
+		Fl_Round_Button* o2 = new Fl_Round_Button(m_refreshGroup->x(),
+				o->y() + o->h() + LST_Y_MARGIN,
+				ROUND_BTN_WIDTH,
+				ITEM_HEIGHT,
+				REFRESH_20MS_LABEL);
+		o2->type(102);
+		o2->down_box(FL_ROUND_DOWN_BOX);
+		o2->callback((Fl_Callback*) updateRefreshTime);
+
+		Fl_Round_Button* o3 = new Fl_Round_Button(m_refreshGroup->x(),
+				o2->y() + o2->h() + LST_Y_MARGIN,
+				ROUND_BTN_WIDTH,
+				ITEM_HEIGHT,
+				REFRESH_200MS_LABEL);
+		o3->type(102);
+		o3->down_box(FL_ROUND_DOWN_BOX);
+		o3->callback((Fl_Callback*) updateRefreshTime);
+
+		Fl_Round_Button* o4 = new Fl_Round_Button(m_refreshGroup->x(),
+				o3->y() + o3->h() + LST_Y_MARGIN,
+				ROUND_BTN_WIDTH,
+				ITEM_HEIGHT,
+				REFRESH_1S_LABEL);
+		o4->type(102);
+		o4->down_box(FL_ROUND_DOWN_BOX);
+		o4->callback((Fl_Callback*) updateRefreshTime);
+		//TODO: Select value by default
+	}
+	m_refreshGroup->end();
+	scroll->add(m_refreshGroup);
+
+	m_modeGroup = new Fl_Group(scroll->x()+BOARD_MARGIN,
+					m_refreshGroup->y()+m_refreshGroup->h()+Y_MARGIN,
+					scroll->w()-(2 * BOARD_MARGIN),
+					3 * (ITEM_HEIGHT+LST_Y_MARGIN));
+	{
+		Fl_Box *lbl2 = new Fl_Box(m_modeGroup->x(),
+								  m_modeGroup->y(),
+								  m_modeGroup->w(),
+								  ITEM_HEIGHT,
+								  "Mode : ");
+		lbl2->align(FL_ALIGN_CLIP|FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+
+		Fl_Round_Button* o = new Fl_Round_Button(m_refreshGroup->x(),
+				lbl2->y() + lbl2->h() + LST_Y_MARGIN,
+				ROUND_BTN_WIDTH,
+				ITEM_HEIGHT,
+				SAMPLE_MODE_LABEL);
+		o->type(102);
+		o->down_box(FL_ROUND_DOWN_BOX);
+		o->callback((Fl_Callback*) updateMode);
+
+		Fl_Round_Button* o2 = new Fl_Round_Button(m_refreshGroup->x(),
+				o->y() + o->h() + LST_Y_MARGIN,
+				ROUND_BTN_WIDTH,
+				ITEM_HEIGHT,
+				EXTTEST_MODE_LABEL);
+		o2->type(102);
+		o2->down_box(FL_ROUND_DOWN_BOX);
+		o2->callback((Fl_Callback*) updateMode);
+		//TODO: Select value by default
+	}
+	m_modeGroup->end();
+	scroll->add(m_modeGroup);
+
+	//m_refreshGroup->hide();
+	m_modeGroup->hide();
 	//printf("%s probe currebnt index %d ptr %p \n", __PRETTY_FUNCTION__, m_probeChoice->value(), m_probeChoice);
 }
 
@@ -106,12 +216,12 @@ int ProbeTab::getProbeIndex(void)
 	return m_probeChoice->value();
 }
 
-static void RefreshProbeCallback(Fl_Widget *w, void * ptr)
+static void refreshProbeCallback(Fl_Widget *w, void * ptr)
 {
 	printf("Refresh probe list !\n");
 }
 
-static void ConnectProbeCallback(Fl_Widget *w, void * ptr)
+static void connectProbeCallback(Fl_Widget *w, void * ptr)
 {
 	Fl_Button *btn = (Fl_Button *) w;
 	Fl_Widget *parent = w->parent();
@@ -124,11 +234,56 @@ static void ConnectProbeCallback(Fl_Widget *w, void * ptr)
 	while (p->parent()) p = p->parent();
 
 	//printf("Connect probe ! Label \"%s\" \n", btn->label());
-	if(!strcmp(btn->label(), CONNECT_LABEL)) {
+	if(btn->label() == CONNECT_LABEL) {
 		if(0 == ((MainWindow*)p)->connect(parent))
 			btn->label(DISCONNECT_LABEL);
 	} else {
 		((MainWindow*)p)->disconnect(0);
 		btn->label(CONNECT_LABEL);
 	}
+}
+
+static void updateRefreshTime(Fl_Widget *w, void * ptr)
+{
+	// TODO get current refresh time
+	int refreshTime = 0;
+	Fl_Widget *p = w->parent();
+
+	while (p->parent()) p = p->parent();
+	//printf("Label : %s\n", w->label());
+
+	if(w->label() == NO_REFRESH_LABEL)
+	{
+		refreshTime = NO_REFRESH_VAL;
+	} else if(w->label() == REFRESH_20MS_LABEL) {
+		refreshTime = REFRESH_20MS_VAL;
+	} else if(w->label() == REFRESH_200MS_LABEL) {
+		refreshTime = REFRESH_200MS_VAL;
+	} else if(w->label() == REFRESH_1S_LABEL) {
+		refreshTime = REFRESH_1S_VAL;
+	} else {
+		// Unknown choice: Nothing to do.
+	}
+
+	((MainWindow*)p)->updateRefreshTime(refreshTime);
+}
+
+static void updateMode(Fl_Widget *w, void * ptr)
+{
+	//TODO: Get current scan mode
+	int mode = 0;
+	Fl_Widget *p = w->parent();
+
+	while (p->parent()) p = p->parent();
+
+	//printf("Label : %s\n", w->label());
+	if(w->label() == SAMPLE_MODE_LABEL) {
+		mode = JTAG_CORE_SAMPLE_SCANMODE;
+	} else if(w->label() == EXTTEST_MODE_LABEL) {
+		mode = JTAG_CORE_EXTEST_SCANMODE;
+	} else {
+		// Unknown choice: Nothing to do.
+	}
+
+	((MainWindow*)p)->updateScanMode(mode);
 }

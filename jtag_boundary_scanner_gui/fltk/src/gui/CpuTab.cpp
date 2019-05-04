@@ -19,7 +19,7 @@
 
 /**
 * @file   CpuTab.cpp
-* @brief  Implement TODO.
+* @brief  Implement CPU tab graphical.
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
 //TODO: Delete if not use
@@ -354,4 +354,28 @@ const CpuPinCheckBox* CpuTab::getPinCheckBoxes(size_t p_index) const
 		return m_cpuPinCheckBoxes[p_index];
 
 	return NULL;
+}
+
+void CpuTab::setInputPin(size_t p_index, int state)
+{
+	if(p_index < m_cpuPinCheckBoxes.size())
+		m_cpuPinCheckBoxes[p_index]->setInputState(state);
+}
+
+void CpuTab::setOutputPin(size_t p_index, int state)
+{
+	if(p_index < m_cpuPinCheckBoxes.size())
+		m_cpuPinCheckBoxes[p_index]->setOutputState(state);
+}
+
+void CpuTab::setOutputEnablePin(size_t p_index, int state)
+{
+	if(p_index < m_cpuPinCheckBoxes.size())
+		m_cpuPinCheckBoxes[p_index]->setOutputEnableState(state);
+}
+
+void CpuTab::toggleOutputPin(size_t p_index)
+{
+	if(p_index < m_cpuPinCheckBoxes.size())
+		m_cpuPinCheckBoxes[p_index]->toggleOutputState();
 }

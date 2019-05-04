@@ -45,8 +45,10 @@ public:
 	int refreshProbeList(void);
 	int scanProcessor(size_t p_probeIndex);
 	int loadCpuBsdl(size_t p_cpuIndex, size_t p_bsdlIndex);
+	int loadManuallyCpuBsdl(size_t p_cpuIndex, std::string p_bsdlPath);
 
 	CpuData* createCpuFromBsdl(std::string p_bsdlPath);
+	unsigned long getCpuIdFromBsdl(std::string p_bsdlPath);
 
 	void startJtagRefreshThread(void);
 	void stopJtagRefreshThread(void);
@@ -55,6 +57,9 @@ public:
 	void refreshCpuPin(void);
 
 	int runApplication(void);
+
+	void updateRefreshTime(int p_refreshTime);
+	void updateScanMode(int p_scanMode);
 private:
 	int searchBsdlFiles(void);
 	int checkAddBsdlFiles(std::string p_bsdlPath);

@@ -2,12 +2,12 @@
  * Jtag Boundary Scanner
  * Copyright (c) 2019 Viveris Technologies
  *
- * Compate WinAPI for Linux is free software; you can redistribute it and/or
+ * JTAG Boundary Scanner is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 3.0 of the License, or (at your option) any later version.
  *
- * Compate WinAPI for Linux is distributed in the hope that it will be useful,
+ * JTAG Boundary Scanner is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License version 3 for more details.
@@ -18,34 +18,26 @@
  */
 
 /**
-* @file   TabsModel.h
-* @brief  Declare virtual pure class for each panel application.
+* @file   BsdlFileChooser.h
+* @brief  Declare BSDL file chooser window.
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
-#ifndef GUI_TABSMODEL_H_
-#define GUI_TABSMODEL_H_
+#ifndef GUI_BSDLFILECHOOSER_H_
+#define GUI_BSDLFILECHOOSER_H_
 
-#include <FL/Fl_Group.H>
-#include <FL/Fl_Scroll.H>
+#include <string>
 
-class TabsModel : public Fl_Group {
+#include <FL/Fl.H>
+#include <FL/Fl_Native_File_Chooser.H>
+
+class BsdlFileChooser {
 public:
-	TabsModel(int p_x,
-			  int p_y,
-			  int p_w,
-			  int p_h,
-			  const char* p_label=0,
-			  bool p_isCpuTab = false);
-	~TabsModel();
-	bool isCpuTab();
+	BsdlFileChooser();
+	~BsdlFileChooser();
 
-	virtual void refresh(void) = 0;
-
-	static const int SCROLL_BORDER = 10;
+	std::string getSelectBsdlFile(void);
 private:
-	bool m_isCpu;
+	Fl_Native_File_Chooser *m_fileChooser;
 };
 
-
-
-#endif /* GUI_TABSMODEL_H_ */
+#endif /* GUI_BSDLFILECHOOSER_H_ */

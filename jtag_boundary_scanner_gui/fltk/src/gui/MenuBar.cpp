@@ -79,6 +79,7 @@ static void MenuOpenBsdlCallback(Fl_Widget *w, void * ptr)
 
 static void MenuConnectCallback(Fl_Widget *w, void * ptr)
 {
+	printf("%s : Entry point\n", __PRETTY_FUNCTION__);
 	Fl_Widget *p = w->parent();
 	while (p->parent()) p = p->parent();
 	((MainWindow*)p)->connect(w);

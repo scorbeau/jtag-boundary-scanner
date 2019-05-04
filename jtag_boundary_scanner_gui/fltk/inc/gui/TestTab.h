@@ -19,7 +19,7 @@
 
 /**
 * @file   TestTab.h
-* @brief  Declare TODO.
+* @brief  Declare test tab panel (just for fun).
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
 #ifndef GUI_TESTTAB_H_

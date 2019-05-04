@@ -19,7 +19,7 @@
 
 /**
 * @file   TestTab.cpp
-* @brief  Implement TODO.
+* @brief  Implement a test panel (just for fun).
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
 #include <stdio.h>
