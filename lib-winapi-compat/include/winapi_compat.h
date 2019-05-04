@@ -25,6 +25,8 @@
 #ifndef WINAPI_COMPAT_H__
 #define WINAPI_COMPAT_H__
 
+#define LIB_WINAPI_COMPAT_VERSION	"1.0.0"
+
 #if defined(__x86_64__)
 	#define __cdecl
 #elif defined(__i386__)
