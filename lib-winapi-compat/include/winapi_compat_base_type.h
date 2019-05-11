@@ -26,17 +26,63 @@
 #define WINAPI_COMPAT_BASE_TYPE_H__
 
 #include <stdbool.h>
+#include <stdint.h>
 
-typedef char		CHAR;
-typedef bool		BOOL;
+#define __nullterminated
+#define far
+#define CONST 		const
+#define VOID 		void
+
+typedef unsigned char	UCHAR;
+typedef char			CHAR;
+
+typedef unsigned short	USHORT;
+typedef short			SHORT;
+
+typedef unsigned long	ULONG;
+typedef long			LONG;
+
+typedef uint64_t		ULONGLONG;
+
+typedef int				INT;
+typedef unsigned int	UINT;
+
+typedef unsigned char	BYTE;
 typedef unsigned short	WORD;
 typedef unsigned long	DWORD;
 
-typedef char*		PSTR, *LPSTR;
-typedef const char*	LPCSTR;
+typedef int			BOOL;
+typedef BYTE		BOOLEAN;
 
+typedef void			*PVOID;
+typedef void 			*LPVOID;
+
+typedef BYTE far		*LPBYTE;
+typedef BOOL far		*LPBOOL;
+
+typedef UCHAR			*PUCHAR;
+typedef CHAR			*PCHAR;
+
+typedef ULONG			*PULONG;
+typedef LONG 			*LPLONG;
+
+typedef WORD			*LPWORD;
+typedef DWORD			*LPDWORD;
+
+typedef CHAR 			*LPSTR;
+typedef CHAR			*PSTR;
+typedef __nullterminated CONST CHAR *LPCSTR;
+
+#ifdef UNICODE
+#error "Unicode not suported by linux"
+	typedef LPWSTR		LPTSTR;
+	typedef LPCWSTR		LPCTSTR;
+#else
+	typedef LPSTR		LPTSTR;
+	typedef LPCSTR		LPCTSTR;
+#endif
 typedef void*		HMODULE;
-typedef void*		HANDLE;
+typedef PVOID		HANDLE;
 typedef void*		FARPROC;
 
 #define INVALID_HANDLE_VALUE	NULL

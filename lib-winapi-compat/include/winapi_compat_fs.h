@@ -30,7 +30,9 @@
 typedef struct _FILETIME {
 	DWORD dwLowDateTime;
 	DWORD dwHighDateTime;
-} FILETIME, *PFILETIME, *LPFILETIME;
+} *PFILETIME, *LPFILETIME;
+
+#define FILETIME struct _FILETIME
 
 typedef struct _WIN32_FIND_DATAA {
 	DWORD		dwFileAttributes;

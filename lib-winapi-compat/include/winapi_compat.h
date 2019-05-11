@@ -45,12 +45,11 @@
 #include <winapi_compat_error.h>
 #include <winapi_compat_module.h>
 #include <winapi_compat_fs.h>
+#include <winapi_compat_core.h>
 
 #ifdef __cplusplus
 extern "C"{
 #endif
-
-void Sleep(DWORD dwMilliseconds);
 
 #ifdef __cplusplus
 }
