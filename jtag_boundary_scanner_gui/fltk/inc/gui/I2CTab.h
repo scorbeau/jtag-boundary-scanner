@@ -27,9 +27,16 @@
 
 #include <FL/Fl.H>
 #include <FL/Fl_Choice.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Multiline_Input.H>
+#include <FL/Fl_Multiline_Output.H>
+#include <FL/Fl_Int_Input.H>
 
 #include "gui/TabsModel.h"
 #include "gui/MainWindow.h"
+
+#include "model/SystemData.h"
 
 class I2CTab : public TabsModel
 {
@@ -43,12 +50,19 @@ public:
 	~I2CTab();
 
 	void refresh(void);
-	void refreshCpuPin(void);
+	void refreshCpuList(void);
+	void refreshCpuPinList(void);
 private:
 	const SystemData *m_systemData;
+
 	Fl_Choice *m_cpuChoice;
 	Fl_Choice *m_sdaChoice;
 	Fl_Choice *m_sclChoice;
+	Fl_Input  *m_address;
+	Fl_Check_Button *m_10bitAddr;
+	Fl_Multiline_Input *m_dataToWrite;
+	Fl_Multiline_Output *m_dataRead;
+	Fl_Int_Input *m_nbDataToRead;
 };
 
 #endif /* GUI_I2CTAB_H_ */

@@ -28,7 +28,9 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Tabs.H>
 
-#include <gui/TabsModel.h>
+#include "gui/TabsModel.h"
+
+class I2CTab;
 
 class TabsMenu : public Fl_Tabs
 {
@@ -38,11 +40,13 @@ public:
 
 	void resize(int p_x, int p_y, int p_w, int p_h);
 	void addTabs(TabsModel *tabs);
-	void deleteTabs(const char* name);
-	void cleanCpuTabs(void);
+	void connect(void);
+	void disconnect(void);
 
 	static const int TABS_MENU_HEIGHT = 12;
 	static const int TABS_MENU_BOARDER = 10;
+private:
+	I2CTab *m_i2cTabs;
 };
 
 #endif /* GUI_TABSMENU_H_ */

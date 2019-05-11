@@ -26,11 +26,10 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Scroll.H>
 
-#include <gui/TabsMenu.h>
-#include <gui/TestTab.h>
+#include "gui/TabsMenu.h"
 #include "gui/ProbeTab.h"
 #include "gui/I2CTab.h"
-#include <gui/MainWindow.h>
+#include "gui/MainWindow.h"
 
 TabsMenu::TabsMenu(int p_x, int p_y, int p_w, int p_h) :
 		Fl_Tabs(p_x, p_y, p_w, p_h)
@@ -44,13 +43,14 @@ TabsMenu::TabsMenu(int p_x, int p_y, int p_w, int p_h) :
 									   p_h-(TABS_MENU_HEIGHT*2),
 									   "Probes");
 	probeTabs->end();
-	I2CTab *i2cTabs = new I2CTab(p,
-								 p_x+TABS_MENU_BOARDER,
-								 p_y+TABS_MENU_HEIGHT,
-								 p_w-(TABS_MENU_BOARDER*2),
-								 p_h-(TABS_MENU_HEIGHT*2),
-								 "I2C");
-	i2cTabs->end();
+	m_i2cTabs = new I2CTab(p,
+						   p_x+TABS_MENU_BOARDER,
+						   p_y+TABS_MENU_HEIGHT,
+						   p_w-(TABS_MENU_BOARDER*2),
+						   p_h-(TABS_MENU_HEIGHT*2),
+						   "I2C");
+	m_i2cTabs->end();
+	m_i2cTabs->deactivate();
 
 #if 0
 	TestTab *test = new TestTab(p_x+TABS_MENU_BOARDER,
@@ -108,27 +108,14 @@ void TabsMenu::addTabs(TabsModel *tabs)
 	resize(x(), y(), w(), h());
 	redraw();
 }
-void TabsMenu::deleteTabs(const char* label)
+
+void TabsMenu::connect(void)
 {
-
-	int i;
-	//printf("%s delete tabs label %s\n", __PRETTY_FUNCTION__, label);
-
-	for(i=0; i < children(); i++) {
-		Fl_Widget *c = child(i);
-		if(!strcmp(c->label(), label)) {
-			//printf("%s Found\n", label);
-			c->hide();
-			c->redraw();
-			remove(c);
-			delete c;
-		}
-	}
-	redraw();
-	parent()->redraw();
+	m_i2cTabs->refreshCpuList();
+	m_i2cTabs->activate();
 }
 
-void TabsMenu::cleanCpuTabs(void)
+void TabsMenu::disconnect(void)
 {
 	int i;
 	for(i=0; i<children(); i++) {
@@ -138,8 +125,10 @@ void TabsMenu::cleanCpuTabs(void)
 			tab->redraw();
 			remove(tab);
 			delete tab;
+			i--;
 		}
 	}
+	m_i2cTabs->deactivate();
 	redraw();
 	parent()->redraw();
 }

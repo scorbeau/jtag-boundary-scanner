@@ -247,7 +247,9 @@ int MainWindow::connect(Fl_Widget *w)
 					m_tabs->w()-(TabsMenu::TABS_MENU_BOARDER*2),
 					m_tabs->h()-(TabsMenu::TABS_MENU_HEIGHT*2)));
 		}
+		m_tabs->connect();
 		m_controller->startJtagRefreshThread();
+
 	}
 
 	return err;
@@ -259,7 +261,7 @@ void MainWindow::disconnect(Fl_Widget *w)
 	{
 		m_controller->stopJtagRefreshThread();
 	}
-	m_tabs->cleanCpuTabs();
+	m_tabs->disconnect();
 
 }
 
