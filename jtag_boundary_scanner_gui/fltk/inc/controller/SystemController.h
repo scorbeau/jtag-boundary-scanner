@@ -59,7 +59,9 @@ public:
 	int runApplication(void);
 
 	void updateRefreshTime(int p_refreshTime);
-	void updateScanMode(int p_scanMode);
+	void updateScanModeModel(int p_scanMode);
+
+	void refreshScanMode(int mode);
 private:
 	int searchBsdlFiles(void);
 	int checkAddBsdlFiles(std::string p_bsdlPath);

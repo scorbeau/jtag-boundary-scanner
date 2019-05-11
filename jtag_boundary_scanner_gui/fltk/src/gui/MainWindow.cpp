@@ -325,5 +325,5 @@ void MainWindow::updateRefreshTime(int p_refreshTime)
 
 void MainWindow::updateScanMode(int p_scanMode)
 {
-	m_controller->updateScanMode(p_scanMode);
+	m_controller->updateScanModeModel(p_scanMode);
 }

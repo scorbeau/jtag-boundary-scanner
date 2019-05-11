@@ -18,41 +18,37 @@
  */
 
 /**
-* @file   ProbeTab.h
-* @brief  Declare Probe Tab GUI class.
+* @file   I2CTab.h
+* @brief  Declare tab to manage emulating I2C bus on GPIO.
 * @author Sébastien CORBEAU <sebastien.corbeau@viveris.fr>
 */
-#ifndef GUI_PROBETAB_H_
-#define GUI_PROBETAB_H_
+#ifndef GUI_I2CTAB_H_
+#define GUI_I2CTAB_H_
 
 #include <FL/Fl.H>
-#include <FL/Fl_Button.H>
 #include <FL/Fl_Choice.H>
 
 #include "gui/TabsModel.h"
 #include "gui/MainWindow.h"
 
-#include "model/SystemData.h"
-
-class ProbeTab : public TabsModel
+class I2CTab : public TabsModel
 {
 public:
-	ProbeTab(MainWindow *p_win,
+	I2CTab(MainWindow *p_win,
 			 int p_x,
 			 int p_y,
 			 int p_w,
 			 int p_h,
 			 const char *p_label = 0);
-	~ProbeTab();
+	~I2CTab();
+
 	void refresh(void);
-	int getProbeIndex(void);
-	void showJtagParameters(bool p_visible = true);
+	void refreshCpuPin(void);
 private:
 	const SystemData *m_systemData;
-	Fl_Button *m_connectBtn;
-	Fl_Choice *m_probeChoice;
-	Fl_Group  *m_refreshGroup;
-	Fl_Group  *m_modeGroup;
+	Fl_Choice *m_cpuChoice;
+	Fl_Choice *m_sdaChoice;
+	Fl_Choice *m_sclChoice;
 };
 
-#endif /* GUI_PROBETAB_H_ */
+#endif /* GUI_I2CTAB_H_ */

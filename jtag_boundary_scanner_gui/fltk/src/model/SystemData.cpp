@@ -29,12 +29,17 @@ SystemData::SystemData()
 {
 	m_refreshTime = DEFAULT_REFRESH_VAL;
 	m_scanMode = DEFAULT_SCAN_MODE;
+
+	m_mutex = new pthread_mutex_t[1];
+	pthread_mutex_init(m_mutex, NULL);
 }
 
 SystemData::~SystemData()
 {
 	cleanProbe();
 	cleanCpu();
+	pthread_mutex_destroy(m_mutex);
+	delete m_mutex;
 }
 
 const CpuData* SystemData::getCpu(size_t p_index) const
@@ -143,26 +148,42 @@ void SystemData::updateInputState(size_t p_cpuIndex,
 		m_cpu[p_cpuIndex]->updateInputState(p_gpioIndex, p_state);
 }
 
-int SystemData::getRefreshTime(void)
+int SystemData::getRefreshTime(void) const
 {
-	//TODO: Update multithreading
-	return m_refreshTime;
+	int ret = -1;
+	pthread_mutex_lock(m_mutex);
+	ret = m_refreshTime;
+	pthread_mutex_unlock(m_mutex);
+	return ret;
 }
 
 void SystemData::setRefreshTime(int p_refreshTime)
 {
-	//TODO: Update multithreading + check value
+	if(p_refreshTime < 0)
+		return;
+	printf("Refresh time %d\n", p_refreshTime);
+	pthread_mutex_lock(m_mutex);
 	m_refreshTime = p_refreshTime;
+	pthread_mutex_unlock(m_mutex);
 }
 
-int SystemData::getScanMode(void)
+int SystemData::getScanMode(void) const
 {
-	//TODO: Update multithreading
-	return m_scanMode;
+	int ret = -1;
+	pthread_mutex_lock(m_mutex);
+	ret = m_scanMode;
+	pthread_mutex_unlock(m_mutex);
+
+	return ret;
 }
 
 void SystemData::setScanMode(int p_scanMode)
 {
-	//TODO: Update multithreading + value
+	if(p_scanMode != JTAG_CORE_EXTEST_SCANMODE &&
+			p_scanMode != JTAG_CORE_SAMPLE_SCANMODE)
+		return;
+	printf("Scan mode %d\n", p_scanMode);
+	pthread_mutex_lock(m_mutex);
 	m_scanMode = p_scanMode;
+	pthread_mutex_unlock(m_mutex);
 }

@@ -27,6 +27,7 @@
 
 #include <string>
 #include <vector>
+#include <pthread.h>
 
 #include "ProbeData.h"
 #include "CpuData.h"
@@ -74,10 +75,10 @@ public:
 
 	void addCpuBsdlFile(size_t p_index, std::string p_path);
 
-	int getRefreshTime(void);
+	int getRefreshTime(void) const;
 	void setRefreshTime(int p_refreshTime);
 
-	int getScanMode(void);
+	int getScanMode(void) const;
 	void setScanMode(int p_scanMode);
 private:
 	std::vector<ProbeData*> m_probe;
@@ -85,6 +86,8 @@ private:
 
 	int m_refreshTime;
 	int m_scanMode;
+
+	pthread_mutex_t *m_mutex;
 };
 
 #endif /*  MODEL_SYSTEM_DATA_H__ */

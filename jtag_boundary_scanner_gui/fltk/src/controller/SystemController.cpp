@@ -30,6 +30,7 @@
 
 #include "controller/SystemController.h"
 #include "gui/CpuTab.h"
+#include "configuration.h"
 
 #if defined(WIN32) || defined(_WIN32)
 	#include <windows.h>
@@ -386,10 +387,8 @@ void SystemController::startJtagRefreshThread(void)
 		return;
 	}
 
-	// TODO Make configurable SCANMODE
 	for(size_t i=0; i<m_systemData->getNbCpu(); i++) {
-		//jtagcore_set_scan_mode(m_jtagCore, i, JTAG_CORE_SAMPLE_SCANMODE);
-		jtagcore_set_scan_mode(m_jtagCore, i, JTAG_CORE_EXTEST_SCANMODE);
+		jtagcore_set_scan_mode(m_jtagCore, i, m_systemData->getScanMode());
 	}
 
 	pthread_attr_init (&thread_attr);
@@ -554,27 +553,69 @@ void SystemController::updateRefreshTime(int p_refreshTime)
 	m_systemData->setRefreshTime(p_refreshTime);
 }
 
-void SystemController::updateScanMode(int p_scanMode)
+void SystemController::updateScanModeModel(int p_scanMode)
 {
 	m_systemData->setScanMode(p_scanMode);
+}
+
+void SystemController::refreshScanMode(int mode)
+{
+	for(size_t i=0; i<m_systemData->getNbCpu(); i++) {
+		jtagcore_set_scan_mode(m_jtagCore, i, mode);
+		//jtagcore_set_scan_mode(m_jtagCore, i, JTAG_CORE_EXTEST_SCANMODE);
+	}
 }
 
 static void *refresh_thread_process(void * arg)
 {
 	SystemController *ctrl = (SystemController *) arg;
+	const SystemData *data;
+	int sleep;
+	int currentMode;
+	int mode;
 
-	if(!ctrl)
-		printf("Controller null\n");
+	if(!ctrl || !ctrl->getSystemData()) {
+		//TODO Error msg ??
+		printf("Controller or data model null\n");
+		while(1);
+	}
+	data = ctrl->getSystemData();
+	currentMode = data->getScanMode();
 
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 	while(1) {
-		Sleep(1);
+		if(currentMode == JTAG_CORE_SAMPLE_SCANMODE)
+			sleep = data->getRefreshTime();
+		else
+			sleep = 20;
+
+		if(sleep != NO_REFRESH_VAL) {
+			Sleep(sleep);
+		}
 		//printf("Refresh CPU pin\n");
 
 		if(ctrl)
 			ctrl->refreshCpuPin();
+
+		if(sleep == NO_REFRESH_VAL) {
+			printf("Thread enter in no refresh mode\n");
+			do {
+				sleep = data->getRefreshTime();
+				mode = data->getScanMode();
+				Sleep(20);
+			} while(sleep == NO_REFRESH_VAL &&
+					mode == JTAG_CORE_SAMPLE_SCANMODE);
+			printf("Thread exit in no refresh mode\n");
+		}
+
+		mode = data->getScanMode();
+		if(mode != currentMode) {
+			printf("Change mode to %d\n", mode);
+			ctrl->refreshScanMode(mode);
+			currentMode = mode;
+		}
 	}
 
 	pthread_exit (0);

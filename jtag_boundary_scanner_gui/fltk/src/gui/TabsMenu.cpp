@@ -29,6 +29,7 @@
 #include <gui/TabsMenu.h>
 #include <gui/TestTab.h>
 #include "gui/ProbeTab.h"
+#include "gui/I2CTab.h"
 #include <gui/MainWindow.h>
 
 TabsMenu::TabsMenu(int p_x, int p_y, int p_w, int p_h) :
@@ -43,6 +44,14 @@ TabsMenu::TabsMenu(int p_x, int p_y, int p_w, int p_h) :
 									   p_h-(TABS_MENU_HEIGHT*2),
 									   "Probes");
 	probeTabs->end();
+	I2CTab *i2cTabs = new I2CTab(p,
+								 p_x+TABS_MENU_BOARDER,
+								 p_y+TABS_MENU_HEIGHT,
+								 p_w-(TABS_MENU_BOARDER*2),
+								 p_h-(TABS_MENU_HEIGHT*2),
+								 "I2C");
+	i2cTabs->end();
+
 #if 0
 	TestTab *test = new TestTab(p_x+TABS_MENU_BOARDER,
 								p_y+TABS_MENU_HEIGHT,
