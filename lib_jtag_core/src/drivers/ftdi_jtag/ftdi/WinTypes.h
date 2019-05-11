@@ -3,6 +3,7 @@
 
 #define WINAPI
 
+#ifndef WINAPI_COMPAT_BASE_TYPE_H__
 typedef unsigned int            DWORD;
 typedef unsigned int            ULONG;
 typedef unsigned short            USHORT;
@@ -33,6 +34,7 @@ typedef LONG                    *LPLONG;
 typedef PVOID                    LPVOID;
 typedef void                    VOID;
 typedef unsigned long long int    ULONGLONG;
+#endif /* WINAPI_COMPAT_BASE_TYPE_H__ */
 
 typedef struct _OVERLAPPED {
     DWORD Internal;
@@ -59,13 +61,21 @@ typedef struct _EVENT_HANDLE
     int             iVar;
 } EVENT_HANDLE;
 
+#ifdef SYSTEMTIME
+#undef SYSTEMTIME
+#endif
 typedef struct timeval SYSTEMTIME;
+
+#ifdef FILETIME
+#undef FILETIME
+#endif
 typedef struct timeval FILETIME;
+
 #ifndef TRUE
-#define TRUE    1
+	#define TRUE    1
 #endif
 #ifndef FALSE
-#define FALSE    0
+	#define FALSE    0
 #endif
 
 //

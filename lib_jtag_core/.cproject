@@ -91,11 +91,31 @@
                         					
                     </folderInfo>
                     					
+                    <folderInfo id="cdt.managedbuild.config.gnu.cross.lib.debug.663413831.591341532" name="/" resourcePath="src/drivers/ftdi_jtag">
+                        						
+                        <toolChain id="cdt.managedbuild.toolchain.gnu.cross.lib.debug.1827901273" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.lib.debug" unusedChildren="">
+                            							
+                            <tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.312447495" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler.1445033293"/>
+                            							
+                            <tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1301963679" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler.64797756"/>
+                            							
+                            <tool id="cdt.managedbuild.tool.gnu.cross.c.linker.1375261867" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker.2130903821"/>
+                            							
+                            <tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1608573651" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker.411370489"/>
+                            							
+                            <tool id="cdt.managedbuild.tool.gnu.cross.archiver.1670847533" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver.263728384"/>
+                            							
+                            <tool id="cdt.managedbuild.tool.gnu.cross.assembler.913620909" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler.652904508"/>
+                            						
+                        </toolChain>
+                        					
+                    </folderInfo>
+                    					
                     <sourceEntries>
                         						
                         <entry excluding="build|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
                         						
-                        <entry excluding="drivers/lpt_jtag|drivers/ftdi_jtag" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+                        <entry excluding="drivers/lpt_jtag" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
                         					
                     </sourceEntries>
                     				

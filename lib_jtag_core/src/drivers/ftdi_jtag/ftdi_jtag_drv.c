@@ -22,7 +22,7 @@
  * @brief  FTDI based probes driver
  * @author Jean-François DEL NERO <Jean-Francois.DELNERO@viveris.fr>
  */
-
+//TODO: Clean printf
 #include <stdio.h>
 #include <string.h>
 #if !defined(WIN32)
@@ -39,7 +39,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#include "winapi_compat.h"
 #include "ftdi/ftd2xx.h"
 
 #ifdef __cplusplus
@@ -68,11 +68,8 @@ static drv_desc subdrv_list[]=
 	{"USB_OLIMEX_ARM_OCD","USB Olimex ARM USB OCD",PROBE_OLIMEX_OCD,0}
 };
 
-#if defined(__linux__)
-static HANDLE lib_handle = 0;
-#else
+
 static HMODULE lib_handle = 0;
-#endif
 
 static FT_HANDLE ftdih = NULL;
 static FT_DEVICE ftdi_device;
@@ -82,14 +79,14 @@ static unsigned char nSRST;
 static unsigned char nSRSTnOE;
 
 
-static unsigned char low_direction;
+//static unsigned char low_direction;
 static unsigned char high_output;
 static unsigned char high_direction;
 
 unsigned char ftdi_out_buf[64 * 1024];
 unsigned char ftdi_in_buf[64 * 1024];
 
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(WINAPI_COMPAT_H__)
 
 int Sleep( unsigned int timeout_ms )
 {
@@ -101,8 +98,6 @@ int Sleep( unsigned int timeout_ms )
 }
 
 #endif
-
-
 
 #if !defined(FTDILIB)
 
@@ -150,12 +145,17 @@ FT_SETCHARS pFT_SetChars;
 #endif
 
 
+#if defined(WIN32)
+	#define MODULE_NAME		"ftd2xx.dll"
+#else
+	#define MODULE_NAME		"./libftd2xx.so.1.4.8"
+#endif
+
 static int ft2232_set_data_bits_low_byte(unsigned char value, unsigned char direction)
 {
 	FT_STATUS status;
 	DWORD dw_bytes_written = 0;
 	unsigned char buf[3];
-	unsigned long bytes_written;
 
 	buf[0] = 0x80;		// command "set data bits low byte"
 	buf[1] = value;		// value
@@ -163,7 +163,6 @@ static int ft2232_set_data_bits_low_byte(unsigned char value, unsigned char dire
 
 	status = pFT_Write(ftdih, buf, sizeof(buf), &dw_bytes_written);
 	if (status != FT_OK) {
-		bytes_written = dw_bytes_written;
 		return -1;
 	}
 
@@ -175,7 +174,6 @@ static int ft2232_set_data_bits_high_byte(unsigned char value, unsigned char dir
 	FT_STATUS status;
 	DWORD dw_bytes_written = 0;
 	unsigned char buf[3];
-	unsigned long bytes_written;
 
 	buf[0] = 0x82;		// command "set data bits high byte"
 	buf[1] = value;		// value
@@ -183,7 +181,6 @@ static int ft2232_set_data_bits_high_byte(unsigned char value, unsigned char dir
 
 	status = pFT_Write(ftdih, buf, sizeof(buf), &dw_bytes_written);
 	if (status != FT_OK) {
-		bytes_written = dw_bytes_written;
 		return -1;
 	}
 
@@ -198,25 +195,30 @@ int drv_FTDI_Detect(jtag_core * jc)
 
 
 	if(lib_handle == NULL)
-		lib_handle = LoadLibrary("ftd2xx.dll");
+		lib_handle = LoadLibrary(MODULE_NAME);
 
 	if (lib_handle)
 	{
+		//printf("%s FTDI link %s charged\n", __PRETTY_FUNCTION__, MODULE_NAME);
 		pFT_ListDevices = (FT_LISTDEVICES)GetProcAddress(lib_handle, "FT_ListDevices");
-		if (!pFT_ListDevices)
+		if (!pFT_ListDevices) {
+			//printf("%s pFT_ListDevices NULL\n", __PRETTY_FUNCTION__);
 			return 0;
+		}
 
 		status = pFT_ListDevices(&numDevs, NULL, FT_LIST_NUMBER_ONLY);
-		if (status != FT_OK && !numDevs)
+		if (status != FT_OK /* && !numDevs */)
 		{
+			//printf("%s pFT_ListDevices : return %x !\n", __PRETTY_FUNCTION__, status);
 			jtagcore_logs_printf(jc,MSG_ERROR,"pFT_ListDevices : Error %x !\r\n",status);
 			return 0;
 		}
 
+		//printf("%s Detect %d device\n", __PRETTY_FUNCTION__, numDevs);
 		i = 0;
 		while(i<numDevs)
 		{
-			status = pFT_ListDevices((PVOID)i, SerialNumber, FT_LIST_BY_INDEX | FT_OPEN_BY_DESCRIPTION);
+			status = pFT_ListDevices((LPVOID)i, (LPVOID)SerialNumber, (DWORD)FT_LIST_BY_INDEX | FT_OPEN_BY_DESCRIPTION);
 			if (status != FT_OK)
 			{
 				jtagcore_logs_printf(jc,MSG_ERROR,"pFT_ListDevices : Error %x !\r\n",status);
@@ -227,7 +229,7 @@ int drv_FTDI_Detect(jtag_core * jc)
 			strcpy(subdrv_list[i].drv_desc,SerialNumber);
 			strcat(subdrv_list[i].drv_desc," ");
 
-			status = pFT_ListDevices((PVOID)i, SerialNumber, FT_LIST_BY_INDEX | FT_OPEN_BY_SERIAL_NUMBER);
+			status = pFT_ListDevices((LPVOID)i, (LPVOID)SerialNumber, FT_LIST_BY_INDEX | FT_OPEN_BY_SERIAL_NUMBER);
 			if (status != FT_OK)
 			{
 				jtagcore_logs_printf(jc,MSG_ERROR,"pFT_ListDevices : Error %x !\r\n",status);
@@ -241,6 +243,8 @@ int drv_FTDI_Detect(jtag_core * jc)
 
 
 		return numDevs;
+	} else {
+		printf("FTDI link %s failed\n", MODULE_NAME);
 	}
 
 	return 0;
@@ -252,19 +256,16 @@ int drv_FTDI_Init(jtag_core * jc, int sub_drv, char * params)
 	DWORD deviceID;
 	char SerialNumber[16];
 	char Description[64];
-	DWORD openex_flags = 0;
-	char *openex_string = NULL;
 	int numDevs;
 	DWORD devIndex;
 	int nbRead,nbtosend;
 
-	#ifdef WIN32
-
 	if(lib_handle == NULL)
-		lib_handle = LoadLibrary("ftd2xx.dll");
+		lib_handle = LoadLibrary(MODULE_NAME);
 
 	if (lib_handle)
 	{
+		printf("%s FTDI link %s charged\n", __PRETTY_FUNCTION__, MODULE_NAME);
 		pFT_Write = (FT_WRITE)GetProcAddress(lib_handle, "FT_Write");
 		if (!pFT_Write)
 			goto loadliberror;
@@ -337,14 +338,10 @@ int drv_FTDI_Init(jtag_core * jc, int sub_drv, char * params)
 	}
 	else
 	{
+		printf("FTDI link %s failed\n", MODULE_NAME);
 		jtagcore_logs_printf(jc,MSG_ERROR,"drv_FTDI_Init : Can't open ftd2xx.dll !\r\n");
 		return -1;
 	}
-	#else
-		// TODO : Linux lib loader.
-		return -1;
-	#endif
-
 
 	status = pFT_ListDevices(&numDevs, NULL, FT_LIST_NUMBER_ONLY);
 	if (status != FT_OK && !numDevs)
@@ -374,14 +371,14 @@ int drv_FTDI_Init(jtag_core * jc, int sub_drv, char * params)
 		goto loadliberror;
 	}
 
-	status = pFT_GetQueueStatus(ftdih, &nbRead);
+	status = pFT_GetQueueStatus(ftdih, (DWORD*)&nbRead);
 	if (status != FT_OK) {
 		jtagcore_logs_printf(jc,MSG_ERROR,"pFT_GetQueueStatus : Error %x !\r\n",status);
 		goto loadliberror;
 	}
 
 	if ( nbRead > 0)
-		pFT_Read(ftdih, &ftdi_in_buf, nbRead, &nbRead);
+		pFT_Read(ftdih, &ftdi_in_buf, nbRead, (LPDWORD)&nbRead);
 
 	//Set USB request transfer sizes to 64K
 	status = pFT_SetUSBParameters(ftdih, 65536, 65535);
@@ -482,7 +479,7 @@ int drv_FTDI_Init(jtag_core * jc, int sub_drv, char * params)
 	ftdi_out_buf[nbtosend++] = 0x86;
 	ftdi_out_buf[nbtosend++] = 0x05;
 	ftdi_out_buf[nbtosend++] = 0x00;
-	status = pFT_Write(ftdih, ftdi_out_buf, nbtosend, &nbtosend);
+	status = pFT_Write(ftdih, ftdi_out_buf, nbtosend, (LPDWORD)&nbtosend);
 	if (status != FT_OK) {
 		jtagcore_logs_printf(jc,MSG_ERROR,"pFT_Write : Error %x !\r\n",status);
 		goto loadliberror;
@@ -514,7 +511,7 @@ int drv_FTDI_DeInit(jtag_core * jc)
 int drv_FTDI_TDOTDI_xfer(jtag_core * jc, unsigned char * str_out, unsigned char * str_in, int size)
 {
 	int i,j,l,payloadsize;
-	unsigned char cur_tms_state;
+	//unsigned char cur_tms_state;
 	int nbRead, nbtosend,rounded_size;
 	FT_STATUS status;
 	int read_ptr;
@@ -526,7 +523,7 @@ int drv_FTDI_TDOTDI_xfer(jtag_core * jc, unsigned char * str_out, unsigned char 
 	if (size)
 	{
 		i = 0;
-		cur_tms_state = 0;
+		//cur_tms_state = 0;
 
 		nbtosend = 0;
 
@@ -551,23 +548,23 @@ int drv_FTDI_TDOTDI_xfer(jtag_core * jc, unsigned char * str_out, unsigned char 
 			if (str_out[i] & JTAG_STR_TMS)
 			{
 				ftdi_out_buf[nbtosend] |= 0x3F;
-				cur_tms_state = 1;
+				//cur_tms_state = 1;
 			}
 
 			nbtosend++;
 
-			status = pFT_Write(ftdih, ftdi_out_buf, nbtosend, &nbtosend);
+			status = pFT_Write(ftdih, ftdi_out_buf, nbtosend, (LPDWORD)&nbtosend);
 
 			if (str_in)
 			{
-				status = pFT_GetQueueStatus(ftdih, &nbRead);
+				status = pFT_GetQueueStatus(ftdih, (LPDWORD)&nbRead);
 				while (nbRead < 1 && (status == FT_OK))
 				{
 					Sleep(3);
-					status = pFT_GetQueueStatus(ftdih, &nbRead);
+					status = pFT_GetQueueStatus(ftdih, (LPDWORD)&nbRead);
 				}
 
-				status = pFT_Read(ftdih, &ftdi_in_buf, nbRead, &nbRead);
+				status = pFT_Read(ftdih, &ftdi_in_buf, nbRead, (LPDWORD)&nbRead);
 
 				for (l = 0; l < 1; l++)
 				{
@@ -627,17 +624,17 @@ int drv_FTDI_TDOTDI_xfer(jtag_core * jc, unsigned char * str_out, unsigned char 
 		{
 			ftdi_out_buf[1] = ( ( (payloadsize>>3)-1 ) & 0xff);
 			ftdi_out_buf[2] = ( ( (payloadsize>>3)-1 ) >> 8);
-			status = pFT_Write(ftdih, ftdi_out_buf, nbtosend, &nbtosend);
+			status = pFT_Write(ftdih, ftdi_out_buf, nbtosend, (LPDWORD)&nbtosend);
 
 			if (str_in)
 			{
 				do
 				{
 					Sleep(3);
-					status = pFT_GetQueueStatus(ftdih, &nbRead);
+					status = pFT_GetQueueStatus(ftdih, (LPDWORD)&nbRead);
 				} while (nbRead < (payloadsize >> 3) && (status == FT_OK ));
 
-				status = pFT_Read(ftdih, &ftdi_in_buf, nbRead, &nbRead);
+				status = pFT_Read(ftdih, &ftdi_in_buf, nbRead, (LPDWORD)&nbRead);
 
 				for (l = 0; l < payloadsize; l++)
 				{
@@ -689,17 +686,17 @@ int drv_FTDI_TDOTDI_xfer(jtag_core * jc, unsigned char * str_out, unsigned char 
 		if (payloadsize)
 		{
 			ftdi_out_buf[1] = ((payloadsize - 1) & 0xf);
-			status = pFT_Write(ftdih, ftdi_out_buf, nbtosend, &nbtosend);
+			status = pFT_Write(ftdih, ftdi_out_buf, nbtosend, (LPDWORD)&nbtosend);
 
 			if (str_in)
 			{
 				do
 				{
 					Sleep(3);
-					status = pFT_GetQueueStatus(ftdih, &nbRead);
+					status = pFT_GetQueueStatus(ftdih, (LPDWORD)&nbRead);
 				} while ((nbRead < ((payloadsize / 8) - 1)) && (status == FT_OK));
 
-				status = pFT_Read(ftdih, &ftdi_in_buf, nbRead, &nbRead);
+				status = pFT_Read(ftdih, &ftdi_in_buf, nbRead, (LPDWORD)&nbRead);
 
 				for (l = 0; l < payloadsize; l++)
 				{
@@ -726,6 +723,8 @@ int drv_FTDI_TMS_xfer(jtag_core * jc, unsigned char * str_out, int size)
 	int nbtosend;
 	FT_STATUS status;
 	unsigned char databyte;
+
+	(void)status;
 
 	memset(ftdi_out_buf, 0, sizeof(ftdi_out_buf));
 	memset(ftdi_in_buf, 0, sizeof(ftdi_in_buf));
@@ -754,7 +753,7 @@ int drv_FTDI_TMS_xfer(jtag_core * jc, unsigned char * str_out, int size)
 				else
 					ftdi_out_buf[nbtosend++] = databyte;
 
-				status = pFT_Write(ftdih, ftdi_out_buf, nbtosend, &nbtosend);
+				status = pFT_Write(ftdih, ftdi_out_buf, nbtosend, (LPDWORD)&nbtosend);
 
 				databyte = 0x00;
 			}
@@ -770,7 +769,7 @@ int drv_FTDI_TMS_xfer(jtag_core * jc, unsigned char * str_out, int size)
 
 			ftdi_out_buf[nbtosend++] = databyte;
 
-			status = pFT_Write(ftdih, ftdi_out_buf, nbtosend, &nbtosend);
+			status = pFT_Write(ftdih, ftdi_out_buf, nbtosend, (LPDWORD)&nbtosend);
 
 			databyte = 0x00;
 		}
